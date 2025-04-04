@@ -15,7 +15,9 @@ Jinja2==3.1.6
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
+motor==3.7.0
 pydantic==2.11.1
+pydantic-settings==2.8.1
 pydantic_core==2.33.0
 Pygments==2.19.1
 pymongo==4.11.3
