@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server';
  
 export async function GET(req) {
-    const decodedUserId = req.cookies.get('decodedUserId')?.value;
-
+    const decodedUserId = req.cookies.get('decodedUserId');
     if (!decodedUserId) {
         return new Response(JSON.stringify({ error: 'Decoded ID not found' }), {
       status: 400,
