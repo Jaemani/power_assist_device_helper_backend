@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { randomBytes } from 'crypto'; // generator random string
 import { encryptString } from '@/lib/auth/stringCipher';
- 
+
 export async function POST(req) {
     const body = await req.json();
     const kakaoId = body.kakaoId; // must access after await
