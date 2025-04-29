@@ -8,7 +8,7 @@ export async function GET(req) {
     const decoded = decryptString(id);
     if (!decoded) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
-    return new Response(JSON.stringify({ title: `User ${decoded} pages` }), {
+    return new Response(JSON.stringify({ title: `Vehicle ${decoded} pages` }), {
         status: 200,
         headers: { 
             'Content-Type': 'application/json'

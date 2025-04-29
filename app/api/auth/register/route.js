@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { randomBytes } from 'crypto'; // generator random string
+import { v4 as uuidv4 } from 'uuid';
 import { encryptString } from '@/lib/auth/stringCipher';
 
 export async function POST(req) {
@@ -13,13 +13,13 @@ export async function POST(req) {
         });
     }
 
-    const userId = randomBytes(32).toString('hex'); // 2^256 possibilities
-    console.log(userId);
-    const encodedId = encryptString(userId);
+    const vehicleId = uuidv4();
+    console.log(vehicleId);
+    const encodedId = encryptString(vehicleId);
     console.log(encodedId)
 
     return new Response(JSON.stringify({ 
-        message: `new ID generated!`, 
+        message: `new Vehicle ID generated!`, 
         encodedId: encodedId
     }), {
         status: 200,
