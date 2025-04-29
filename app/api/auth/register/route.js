@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { encryptString } from '@/lib/auth/stringCipher';
 
 export async function POST(req) {
     const body = await req.json();
@@ -14,13 +13,10 @@ export async function POST(req) {
     }
 
     const vehicleId = uuidv4();
-    console.log(vehicleId);
-    const encodedId = encryptString(vehicleId);
-    console.log(encodedId)
 
     return new Response(JSON.stringify({ 
         message: `new Vehicle ID generated!`, 
-        encodedId: encodedId
+        vehicleId: vehicleId
     }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },

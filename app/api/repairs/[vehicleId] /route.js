@@ -18,7 +18,7 @@ export async function GET(_, { params }) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(`[Repair API][Error] 수리 이력 조회 실패 (userId: ${vehicleId}): ${error.message}`);
+    console.error(`[Repair API][Error] 수리 이력 조회 실패 (vehicleId: ${vehicleId}): ${error.message}`);
 
     return NextResponse.json(
       { success: false, error: '서버 오류로 수리 이력을 불러올 수 없습니다.' },
