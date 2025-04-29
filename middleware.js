@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 export function middleware(req) {
   // Decode user ID
   const decodeResponse = decodeQR(req);
+  
   if (decodeResponse instanceof NextResponse && decodeResponse.status !== 200) {
     return decodeResponse;
   } // If object is an instance of ClassName, returns true.
@@ -15,9 +16,14 @@ export function middleware(req) {
   //   return authResponse;
   // }
 
-
+  const response = NextResponse.next()
+  response.cookies.set({
+    name: 'decodedUserId',
+    value: decodeResponse.toString(),
+    path: '/',
+  })
   // All middlewares passed
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
