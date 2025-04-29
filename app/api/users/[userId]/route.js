@@ -1,23 +1,14 @@
 import { NextRequest } from 'next/server';
-import { decodeQR } from '@/lib/middleware/decryptQR';
+import { decryptString } from "@/lib/auth/stringCipher";
 
 export async function GET(req) {
-    const decodeResponse = await decodeQR(req);
-      
-    // if (decodeResponse instanceof NextResponse && decodeResponse.status !== 200) {
-    // return decodeResponse;
-    // } // If object is an instance of ClassName, returns true.
+    const id = req.nextUrl.pathname.split('/').pop(); // Get id from QR
+    if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
 
-    // const decodedUserId = req.headers.get('x-decoded-user-id');
-    // if (!decodedUserId) {
-    //     return new Response(JSON.stringify({ error: 'Decoded ID not found' }), {
-    //         status: 400,
-    //         headers: { 'Content-Type': 'application/json' },
-    //     });
-    // }
+    const decoded = decryptString(id);
+    if (!decoded) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
-    // e.g. Query a database for user with ID `userId`
-    return new Response(JSON.stringify({ title: `User ${decodeResponse} pages` }), {
+    return new Response(JSON.stringify({ title: `User ${decoded} pages` }), {
         status: 200,
         headers: { 
             'Content-Type': 'application/json'

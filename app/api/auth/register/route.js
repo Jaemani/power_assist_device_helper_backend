@@ -16,9 +16,11 @@ export async function POST(req) {
     const userId = randomBytes(32).toString('hex'); // 2^256 possibilities
     console.log(userId);
     const encodedId = encryptString(userId);
-    console.log(encodedId)
 
-    return new Response(JSON.stringify({ message: `kakaoId: ${kakaoId}` }), {
+    return new Response(JSON.stringify({ 
+        message: `new ID generated!`, 
+        encodedId: encodedId
+    }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
     });
