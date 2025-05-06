@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🛠 수리수리 마수리 – 전동보장구 수리이력 관리 시스템
 
-## Getting Started
+<div align="center">
 
-First, run the development server:
+**2025 Kakao Tech for Impact 참여 프로젝트**  
+전동보장구 사용자의 이동권 보장을 위한  
+**QR 기반 수리 이력 관리 시스템**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+</div>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🧩 문제 정의
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+전동보장구(전동휠체어, 전동스쿠터 등)의 수리는  
+① 종이문서, 구두 전달 위주로 이루어지고 있고  
+② 수리 이력이 기관, 사용자, 수리기사 간에 공유되지 않으며  
+③ 수리 내역이 축적되지 않아 반복적인 고장이 발생하고 있음.
 
-## Learn More
+**결과적으로 이동권 침해, 복지예산 비효율, 책임소재 불분명** 등의 문제가 발생하고 있음.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 💡 해결책
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**수리수리 마수리**는 다음과 같은 해결책을 제공합니다:
 
-## Deploy on Vercel
+- QR 코드를 통해 장비 고유 식별 및 수리 이력 조회
+- 사용자 / 수리기사 / 기관 관리자 각각의 관점에서 설계된 화면
+- 수리 항목 체크 → 수리일자 자동기록 → 복지관 통계 연동
+- 수리비 예산 산정 및 보증 여부 확인 가능
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> 수리기사의 사용 편의성을 높이기 위해 **기록 부담 최소화**,  
+> 사용자에게는 **직관적인 이력 확인 UI** 제공
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🖥 시스템 구성도
+
+- **사용자**: 내 장비의 QR코드를 스캔해 수리이력 조회  
+- **수리기사**: QR을 스캔하여 수리 항목 체크 → 자동 저장  
+- **복지관**: 전체 통계 조회 및 Excel 다운로드 기능 제공 예정  
+- **장비별 이력**은 MongoDB에 저장되며, 각 역할별 권한에 따라 접근이 제한됨
+
+---
+
+## 🔧 사용 기술
+
+- Frontend: Flutter Web + Firebase Hosting
+- Backend: Next.js App Router + MongoDB
+- Authentication: Firebase 전화번호 기반 SMS 인증
+- Device Recognition: `uuidv4` 기반 QR 코드 생성
+- Deploy: 자체 서버 (AWS 이전 계획)
+
+---
+
+## 🗓 진행 현황
+
+- ✅ 수리 내역 입력 및 저장 기능 구현  
+- ✅ QR 스캔 및 장비별 이력 확인 기능  
+- ✅ 인증 및 권한 분리 구현
+- ✅ 복지관과 연계하여 전동보장구 테스트 사용자 확보, QR 이미지 생성 및 스티거 제작
+- 🔄 복지관 실사용 테스트 및 피드백 반영 중  
+- 🔄 별따러가자 프로젝트와 연계 예정 (사고 감지 → 수리 연동)
+
+---
+
+## 👤 팀원 역할
+
+| 이름 | 역할 |
+|------|------|
+| 박유빈 | PM |
+| 박현준 | UI/UX |
+| 이종준 | Frontend |
+| 조성현 | Backend |
+| 이재만 | Backend |
+
+---
+
+## 🏛 협력 기관
+
+- 성동장애인종합복지관  
+- 별따러가자
+
+---
+
+## 🌱 향후 계획
+
+- 수리 빈도 기반 부품 수명 예측 기능 개발  
+- 사용자 대시보드 시각화  
+- 복지 예산 자동 집계 기능 추가  
+- 공개 API 제공 및 타 기관 확산 검토
+
+---
+
+<div align="center">
+  
+  ## 🔗 Related Resources
+  
+  | 📘 [Notion Project Page](https://jaeman-hyu.notion.site/1c4ec4b6449b80bca4f2d6413eb7e8ef?pvs=74) | 🧾 [Presentation PDF(중간발표)](https://github.com/user-attachments/files/20057505/-.pdf)|
+  |:---:|:---:|
