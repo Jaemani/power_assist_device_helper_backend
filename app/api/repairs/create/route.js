@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createMessage } from '@/lib/sms';
+import { sendSms } from '@/lib/sms';
 
 export async function POST(request) {
   try {
@@ -14,8 +14,8 @@ export async function POST(request) {
     //   );
     // }
     
-    const userPhoneNumber = "01000000000";
-    createMessage("수리수리 마수리 -  수리이력 생성되었습니다", userPhoneNumber);
+    const userPhoneNumber = "01058922434";
+    sendSms("수리수리 마수리 -  수리이력 생성되었습니다", userPhoneNumber);
 
     return NextResponse.json(
       { success: true, message: '수리 이력이 성공적으로 생성되었습니다.' },
