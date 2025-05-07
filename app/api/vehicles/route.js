@@ -20,7 +20,7 @@ export async function GET(req) {
 
     // 주인 없는 vehicle인 경우
     if(!vehicle.userId){
-        return new Response(JSON.stringify({ message: 'new QR' }), {
+        return new Response(JSON.stringify({ message: 'new QR with no owner' }), {
             status: 200,
             headers: { 
                 'Content-Type': 'application/json'
@@ -30,7 +30,7 @@ export async function GET(req) {
 
     // 주인이 있는 vehicle인 경우
     // 유저 본인인지, guardian인지 확인은 login 시에 진행
-    return new Response(JSON.stringify({ message: 'Succesfully fond vehicle' }), {
+    return new Response(JSON.stringify({ message: 'Succesfully found vehicle & owner' }), {
         status: 200,
         headers: { 
             'Content-Type': 'application/json'

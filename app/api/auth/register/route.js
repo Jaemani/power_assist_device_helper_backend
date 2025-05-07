@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { getUsersCollection } from '@/lib/db/models';
 
 export async function POST(req) {
     const body = await req.json();
