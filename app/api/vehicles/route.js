@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getVehiclesCollection, getUsersCollection, ObjectId } from '@/lib/db/models';
 
 export async function GET(req) {
