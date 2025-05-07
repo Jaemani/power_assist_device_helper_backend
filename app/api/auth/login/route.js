@@ -17,7 +17,7 @@ export async function POST(req) {
     return new Response(JSON.stringify({ status: 'register', firebaseUid }), { status: 200 });
   }
 
-  let guardian_uid = "not guardian"; // default
+  let guardian_uid = ""; // default
 
   if (user.role === 'guardian') { // 보호자일 경우 보호대상 유저의 id 받아옴
     const guardian = await guardians.findOne({ userId: user._id });
@@ -26,9 +26,9 @@ export async function POST(req) {
 
 
 
-  const token = signToken({ uid: user._id.toString(), role: user.role });
+  const token = signToken({ uid: user._id.toString(), role: user.role, guid: guardian_uid });
 
-  return new Response(JSON.stringify({ status: 'login', token, guardian_uid }), {
+  return new Response(JSON.stringify({ status: 'login', token }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
