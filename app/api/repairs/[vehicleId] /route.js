@@ -1,28 +1,21 @@
-// 특정 사용자의 수리 이력을 조회하는 API 
+// app/api/v1/repairs/[vehicleId]/route.js
+import RepairInfo from '@/lib/models/RepairInfo.js'; 
 
-import { NextResponse } from 'next/server';
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const vehicleId = searchParams.get('vehicleId');
+  const doc = await RepairInfo.findOne({ vehicleId }).lean();
+  return new Response(JSON.stringify(doc?.repairReceipt || []), { status: 200 });
+}
 
-export async function GET(_, { params }) {
-  const { userId } = params;
-
-  try {
-    console.info(`[Repair API] 사용자 ${vehicleId} 수리 이력 조회 요청 수신`);
-
-    const dummyRepairs = [
-      { id: 1, description: "배터리 교체", date: "2025-04-10" },
-      { id: 2, description: "타이어 점검", date: "2025-04-20" }
-    ];
-
-    return NextResponse.json(
-      { success: true, repairs: dummyRepairs },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error(`[Repair API][Error] 수리 이력 조회 실패 (vehicleId: ${vehicleId}): ${error.message}`);
-
-    return NextResponse.json(
-      { success: false, error: '서버 오류로 수리 이력을 불러올 수 없습니다.' },
-      { status: 500 }
-    );
-  }
+export async function POST(req) {
+  const { searchParams } = new URL(req.url);
+  const vehicleId = searchParams.get('vehicleId');
+  const record = await req.json();
+  const updated = await RepairInfo.findOneAndUpdate(
+    { vehicleId },
+    { $push: { repairReceipt: record } },
+    { new: true, upsert: true }
+  );
+  return new Response(JSON.stringify(updated.repairReceipt.at(-1)), { status: 201 });
 }
