@@ -4,7 +4,10 @@ import { verifyToken } from '@/lib/auth/JWT';
 
 export async function GET(req) {
     const vehicleId = req.nextUrl.searchParams.get('vehicleId');
-    if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
+    if (!vehicleId) return new Response(JSON.stringify({ error: 'Missing vehicleId' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+    });
 
     const users = await getUsersCollection();
     const vehicles = await getVehiclesCollection();
@@ -90,8 +93,8 @@ export async function GET(req) {
         }
     }
 
-    return new Response(JSON.stringify({ error: 'Matched user not found' }), {
-        status: 400,
+    return new Response(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
+        status: 403,
         headers: { 
             'Content-Type': 'application/json'
          },

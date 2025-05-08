@@ -3,7 +3,10 @@ import { getUsersCollection, getGuardiansCollection } from '@/lib/db/models';
 
 export async function POST(req) {
     const { idToken, phoneNumber, role, vehicleId, userPhoneNumber } = await req.json(); // userPhoneNumber: 보호자일 경우, 보호대상 유저의 전화번호
-    if (!idToken) return new Response('Missing firebase idToken', { status: 400 });
+    if (!idToken) return new Response(JSON.stringify({ error: 'Missing firebase idToken' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
 
     const decoded = await getAuth().verifyIdToken(idToken);
     const firebaseUid = decoded.uid;
