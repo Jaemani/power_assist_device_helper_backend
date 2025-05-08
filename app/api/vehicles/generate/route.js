@@ -5,7 +5,7 @@ import { getVehiclesCollection } from '@/lib/db/models';
 export async function GET(req) {
     const vehicles = await getVehiclesCollection();
 
-    let newVehicleId = "ee32568f-0918-40db-b749-441a62c78e21"
+    let newVehicleId = "ee32568f-0918-40db-b749-441a62c78e21";
 
     if (!newVehicleId) {
         newVehicleId = uuidv4();
@@ -21,19 +21,8 @@ export async function GET(req) {
             createDate: new Date(),
             updateDate: new Date(),
         });
-        return new Response(JSON.stringify({ message: "Vehicle created with ID :", newVehicleId }), {
-            status: 200,
-            headers: { 
-                'Content-Type': 'application/json'
-                },
-        });
+        return NextResponse.json({ message: "Vehicle created with ID :", newVehicleId }, { status: 200 });
     } catch (error) {
-        return new Response(JSON.stringify({ error: 'Error creating vehicle with ID' }), {
-            status: 400,
-            headers: { 
-                'Content-Type': 'application/json'
-                },
-        });
+        return NextResponse.json({ error: 'Error creating vehicle with ID' }, { status: 400 });
     }
-    
 }
