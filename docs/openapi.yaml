@@ -1,14 +1,212 @@
 openapi: 3.0.0
 info:
-  title: Power Assist API
+  title: Soorisoori API
   version: 1.0.0
+  description: API for managing power assist devices, users, guardians, and repair information.
+
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/Jaemani/Soorisoori/1.0.0
+  - url: http://localhost:3000/api
+    description: Local development server
+
 paths:
+  /auth/register:
+    post:
+      summary: Register a new user or guardian
+      description: Registers a new user or guardian based on the provided role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idToken:
+                  type: string
+                  description: Firebase ID token for authentication.
+                phoneNumber:
+                  type: string
+                  description: Phone number of the user or guardian.
+                role:
+                  type: string
+                  enum: [user, guardian]
+                  description: Role of the person being registered.
+                vehicleId:
+                  type: string
+                  description: Vehicle ID for users (required if role is "user").
+                userPhoneNumber:
+                  type: string
+                  description: Phone number of the target user (required if role is "guardian").
+              required:
+                - idToken
+                - phoneNumber
+                - role
+      responses:
+        '200':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "new User Registered!"
+        '400':
+          description: Bad request, such as missing fields or invalid data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User already exists"
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error creating user"
+
+  /auth/login:
+    post:
+      summary: Log in an existing user
+      description: Logs in an existing user using Firebase ID token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idToken:
+                  type: string
+                  description: Firebase ID token for authentication.
+              required:
+                - idToken
+      responses:
+        '200':
+          description: User logged in successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "login"
+                  token:
+                    type: string
+                    description: JWT token for authentication.
+        '400':
+          description: Missing Firebase ID token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing firebase idToken"
+
+  /vehicles:
+    get:
+      summary: Retrieve vehicle information by ID
+      description: Retrieves vehicle information based on the provided vehicle ID.
+      parameters:
+        - in: query
+          name: vehicleId
+          schema:
+            type: string
+          required: true
+          description: The ID of the vehicle to retrieve.
+      responses:
+        '200':
+          description: Successfully found vehicle & Match with owner or Found no-owner Vehicle.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                OwnerFound:
+                  value:
+                    message: "Successfully found vehicle & owner"
+                NoOwner:
+                  value:
+                    message: "new QR with no owner"
+        '400':
+          description: Query missing or Invalid vehicle ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example: 
+                QueryMissing:
+                  value:
+                    message: "Missing vehicleId"
+                VehicleNotFound:
+                  value:
+                    message: "Invalid vehicleId"
+                      
+        '500':
+          description: Ower doesn't matched OR VehicleID doesn't match
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Matched user not found"
+
+  /vehicles/generate:
+    get:
+      summary: Generate a new vehicle ID (테스트용, 관리자용. newVehicleId 없으면 uuid4 기반 생성)
+      description: Generates a new unique vehicle ID and creates a vehicle record.
+      responses:
+        '200':
+          description: Vehicle created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vehicle created with ID:"
+                  newVehicleId:
+                    type: string
+                    example: "ee32568f-0918-40db-b749-441a62c78e21"
+        '400':
+          description: Error creating vehicle.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error creating vehicle with ID"
+
   /repairs/{vehicleId}:
     get:
       summary: 수리 내역 조회
       parameters:
         - name: vehicleId
-          in: path
+          in: path  
           required: true
           schema:
             type: string
@@ -65,3 +263,115 @@ paths:
       responses:
         '200':
           description: 수리 내역 추가 성공
+
+
+  # /guardians/{userId}:
+  #   get:
+  #     summary: Retrieve guardian information for a user
+  #     description: Retrieves guardian information for a specific user.
+  #     parameters:
+  #       - in: path
+  #         name: userId
+  #         schema:
+  #           type: string
+  #         required: true
+  #         description: The ID of the user to retrieve guardian information for.
+  #     responses:
+  #       '200':
+  #         description: Successfully retrieved guardian information.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 success:
+  #                   type: boolean
+  #                   example: true
+  #                 guardian:
+  #                   type: object
+  #                   properties:
+  #                     name:
+  #                       type: string
+  #                       example: "조성현"
+  #                     phone:
+  #                       type: string
+  #                       example: "010-1234-5678"
+  #       '500':
+  #         description: Internal server error.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 success:
+  #                   type: boolean
+  #                   example: false
+  #                 error:
+  #                   type: string
+  #                   example: "서버 오류로 보호자 정보를 불러올 수 없습니다."
+  #   put:
+  #     summary: Update guardian information for a user
+  #     description: Updates guardian information for a specific user.
+  #     parameters:
+  #       - in: path
+  #         name: userId
+  #         schema:
+  #           type: string
+  #         required: true
+  #         description: The ID of the user to update guardian information for.
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               name:
+  #                 type: string
+  #                 description: Name of the guardian.
+  #               phone:
+  #                 type: string
+  #                 description: Phone number of the guardian.
+  #             required:
+  #               - name
+  #               - phone
+  #     responses:
+  #       '200':
+  #         description: Guardian information updated successfully.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 success:
+  #                   type: boolean
+  #                   example: true
+  #                 message:
+  #                   type: string
+  #                   example: "보호자 정보가 성공적으로 수정되었습니다."
+  #       '400':
+  #         description: Bad request, such as missing fields.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 success:
+  #                   type: boolean
+  #                   example: false
+  #                 error:
+  #                   type: string
+  #                   example: "보호자 이름과 전화번호를 모두 입력해야 합니다."
+  #       '500':
+  #         description: Internal server error.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 success:
+  #                   type: boolean
+  #                   example: false
+  #                 error:
+  #                   type: string
+  #                   example: "서버 오류로 보호자 정보를 수정할 수 없습니다."
