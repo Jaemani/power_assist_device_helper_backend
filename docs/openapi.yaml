@@ -1,21 +1,11 @@
-servers:
-  - url: http://localhost:4000
-    description: 로컬 개발용 서버
-
-
 openapi: 3.0.0
 info:
-  title: sooriData API
-  version: '1.0.0'
-servers:
-  - url: http://localhost:4000        
-    description: Local development
+  title: Power Assist API
+  version: 1.0.0
 paths:
-  /api/v1/vehicles/{vehicleId}/repairs:
+  /repairs/{vehicleId}:
     get:
       summary: 수리 내역 조회
-      security:
-        - bearerAuth: []             
       parameters:
         - name: vehicleId
           in: path
@@ -24,17 +14,28 @@ paths:
             type: string
       responses:
         '200':
-          description: 성공
+          description: 수리 내역 조회 성공
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/RepairRecord'
+                  type: object
+                  properties:
+                    troubleInfo:
+                      type: string
+                    repairDetail:
+                      type: string
+                    repairType:
+                      type: string
+                    billedAmount:
+                      type: integer
+                    requestedAmount:
+                      type: integer
+                    isAccident:
+                      type: boolean
     post:
       summary: 수리 내역 추가
-      security:
-        - bearerAuth: []
       parameters:
         - name: vehicleId
           in: path
@@ -42,51 +43,25 @@ paths:
           schema:
             type: string
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RepairRecord'
+              type: array
+              items:
+                type: object
+                properties:
+                  troubleInfo:
+                    type: string
+                  repairDetail:
+                    type: string
+                  repairType:
+                    type: string
+                  billedAmount:
+                    type: integer
+                  requestedAmount:
+                    type: integer
+                  isAccident:
+                    type: boolean
       responses:
-        '201':
-          description: 생성 완료
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RepairRecord'
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-  schemas:
-    RepairRecord:
-      type: object
-      required:                      
-        - date
-        - troubleInfo
-        - repairDetail
-        - repairType
-        - billedAmount
-        - stationCode
-      properties:
-        _id:
-          type: string
-        date:
-          type: string
-          format: date
-        troubleInfo:
-          type: string
-        repairDetail:
-          type: string
-        repairType:
-          type: string
-        billedAmount:
-          type: integer
-        requestedAmount:
-          type: integer
-        isAccident:
-          type: boolean
-        stationCode:
-          type: string
+        '200':
+          description: 수리 내역 추가 성공

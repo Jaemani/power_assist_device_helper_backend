@@ -1,7 +1,7 @@
 // scripts/seed.mjs
 import 'dotenv/config';
 import { v4 as uuidv4 } from 'uuid';
-import connectToDatabase from '../lib/db/connect.js';
+import connectToDatabase from '../db/connect.js';
 import User from '../lib/models/User.js';
 import Vehicle from '../lib/models/Vehicle.js';
 import RepairInfo from '../lib/models/RepairInfo.js';
