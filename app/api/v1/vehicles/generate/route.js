@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getVehiclesCollection } from '@/lib/db/models';
+import { connectToMongoose } from '@/lib/db/connect';
+import Vehicle from '@/db/models';
+
+await connectToMongoose();
 
 export async function GET(req) {
     const vehicles = await getVehiclesCollection();

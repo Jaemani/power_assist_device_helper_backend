@@ -1,11 +1,11 @@
 // app/api/v1/repairs/[vehicleId]/route.js
-import RepairInfo from '@/lib/models/RepairInfo.js'; 
+import Repair from '@/lib/models/Repair.js'; 
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const vehicleId = searchParams.get('vehicleId');
 
-  const doc = await RepairInfo.findOne({ vehicleId }).lean();
+  const doc = await Repair.findOne({ vehicleId }).lean();
 
   return new Response(JSON.stringify(doc?.repairReceipt || []), { status: 200 });
 }
@@ -16,7 +16,7 @@ export async function POST(req) {
   
   const record = await req.json();
 
-  const updated = await RepairInfo.findOneAndUpdate(
+  const updated = await Repair.findOneAndUpdate(
     { vehicleId },
     { $push: { repairReceipt: { $each: record } } },  
     { new: true, upsert: true }

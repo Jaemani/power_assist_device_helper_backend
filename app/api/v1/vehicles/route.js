@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getVehiclesCollection, getUsersCollection, ObjectId } from '@/lib/db/models';
-import { verifyToken } from '@/lib/auth/JWT';
+import { connectToMongoose } from '@/lib/db/connect';
+import { User, Vehicle } from '@/db/models';
+
+await connectToMongoose();
+
+const user = await User.findOne({ firebaseUid: 'abc123' });
 
 export async function GET(req) {
     const vehicleId = req.nextUrl.searchParams.get('vehicleId');
