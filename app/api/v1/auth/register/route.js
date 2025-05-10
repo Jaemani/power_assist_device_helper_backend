@@ -10,7 +10,7 @@ await initializeFirebaseAdmin();
 
 export async function POST(req) {
     try {
-        const { idToken, phoneNumber, role, vehicleId } = await req.json();
+        const { idToken, phoneNumber, role } = await req.json();
         if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
 
         let firebaseUid;
