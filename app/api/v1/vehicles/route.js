@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToMongoose } from '@/lib/db/connect';
-import { User, Vehicle } from '@/db/models';
+import { User, Vehicle } from '@/lib/db/models';
 
 await connectToMongoose();
 
@@ -10,9 +10,7 @@ export async function GET(req) {
     const vehicleId = req.nextUrl.searchParams.get('vehicleId');
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
 
-    const users = await getUsersCollection();
-    const vehicles = await getVehiclesCollection();
-    const vehicle = await vehicles.findOne({ vehicleId });
+    const vehicle = await Vehicle.findOne({ vehicleId });
 
     // 해당 vehicle이 존재하지 않은 경우
     if (!vehicle) return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
@@ -42,7 +40,7 @@ export async function GET(req) {
         guid: ''
     };
 
-    const user = await users.findOne({ _id: new ObjectId(decoded.uid) });
+    const user = await User.findOne({ _id: new ObjectId(decoded.uid) });
     for (let uVehicle of user.vehicleIds) { // user might have multiple vehicles
         console.log(vehicleId, uVehicle, vehicle.userId.toString(), decoded.uid);
         if (vehicleId === uVehicle && vehicle.userId.toString() === decoded.uid) {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToMongoose } from '@/lib/db/connect';
-import { User, Guardian } from '@/db/models';
+import User from '@/lib/db/models';
 import { getAuth } from 'firebase-admin/auth';
 
 await connectToMongoose();
@@ -10,25 +10,22 @@ export async function POST(req) {
     if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
 
     const decoded = await getAuth().verifyIdToken(idToken);
+    console.log('Decoded token:', decoded);
     const firebaseUid = decoded.uid;
 
-    const users = await getUsersCollection();
-    const guardians = await getGuardiansCollection();
 
     try {
-        const user = await users.findOne({ firebaseUid });
+        const user = await User.findOne({ firebaseUid });
         if (user) {
             return NextResponse.json({ error: 'User already exists' }, { status: 400 });
         }
 
-        await users.insertOne({
+        await User.insertOne({
             firebaseUid,
             phoneNumber,
             role,
             vehicleIds: [vehicleId], // array of ObjectId
             guardianIds: [], // array of ObjectId
-            createDate: new Date(),
-            updateDate: new Date(),
         });
 
         return NextResponse.json({ message: 'new User Registered!' }, { status: 200 });

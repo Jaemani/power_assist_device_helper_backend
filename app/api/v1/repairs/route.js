@@ -1,5 +1,5 @@
 import { connectToMongoose } from '@/lib/db/connect';
-import { Repair } from '@/db/models';
+import { Repair } from '@/lib/db/models';
 
 export async function GET(req) {
   const vehicleId = req.nextUrl.searchParams.get('vehicleId');
