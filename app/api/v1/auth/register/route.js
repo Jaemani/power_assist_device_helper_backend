@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { connectToMongoose } from '@/lib/db/connect';
+import { initializeFirebaseAdmin} from '@/lib/firebaseAdmin';
 // import { User } from '@/lib/db/models';
 import { getAuth } from 'firebase-admin/auth';
 
+// await connectToMongoose();
 await connectToMongoose();
+await initializeFirebaseAdmin();
 
 export async function POST(req) {
 
