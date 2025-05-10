@@ -36,7 +36,7 @@ export async function GET(req) {
     //     }
     // }
 
-    const decoded = {
+    const decoded = { // dymmy data
         uid: '681ba925f07406f9e0a87090',
         role: 'user',
         guid: ''

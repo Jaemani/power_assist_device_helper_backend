@@ -2,8 +2,8 @@ import { connectToMongoose } from '@/lib/db/connect';
 import { Repair } from '@/db/models';
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
-  const vehicleId = searchParams.get('vehicleId');
+  const vehicleId = req.nextUrl.searchParams.get('vehicleId');
+  if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
 
   const doc = await Repair.findOne({ vehicleId }).lean();
   const objectId = mongoose.Types.ObjectId(vehicleId);
