@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToMongoose } from '@/lib/db/connect';
+import connectToMongoose from '@/lib/db/connect';
 import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import { User } from '@/lib/db/models'; 
 import { getAuth } from 'firebase-admin/auth';
@@ -26,7 +26,7 @@ export async function POST(req) {
 
 
         try {
-            if (firebaseUid === undefined) {
+            if (firebaseUid === undefined || firebaseUid === "") {
                 return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 });
             }
             
@@ -35,12 +35,13 @@ export async function POST(req) {
                 return NextResponse.json({ error: 'User already exists' }, { status: 400 });
             }
 
-            await User.insertOne({
+            const newUser = new User({
                 firebaseUid,
                 phoneNumber,
                 role,
                 guardianIds: [], // array of ObjectId
             });
+            await newUser.save();
 
             return NextResponse.json({ message: 'new User Registered!' }, { status: 200 });
 

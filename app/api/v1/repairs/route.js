@@ -1,4 +1,4 @@
-import { connectToMongoose } from '@/lib/db/connect';
+import connectToMongoose from '@/lib/db/connect';
 import { Repair } from '@/lib/db/models';
 
 export async function GET(req) {

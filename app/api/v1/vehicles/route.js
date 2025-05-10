@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-import { connectToMongoose } from '@/lib/db/connect';
+import connectToMongoose from '@/lib/db/connect';
 import { User, Vehicle } from '@/lib/db/models';
 
 await connectToMongoose();
-
-const user = await User.findOne({ firebaseUid: 'abc123' });
 
 export async function GET(req) {
     const vehicleId = req.nextUrl.searchParams.get('vehicleId');
@@ -35,17 +33,16 @@ export async function GET(req) {
     // }
 
     const decoded = { // dymmy data
-        uid: '681ba925f07406f9e0a87090',
+        uid: 'HpErhmIUaoc2q2v9yxkXjji375y2',
         role: 'user',
         guid: ''
     };
 
-    const user = await User.findOne({ _id: new ObjectId(decoded.uid) });
-    for (let uVehicle of user.vehicleIds) { // user might have multiple vehicles
-        console.log(vehicleId, uVehicle, vehicle.userId.toString(), decoded.uid);
-        if (vehicleId === uVehicle && vehicle.userId.toString() === decoded.uid) {
-            return NextResponse.json({ message: 'Succesfully found vehicle & owner' }, { status: 200 });
-        }
+    const loginUser = await User.findOne({ firebaseUid: decoded.uid });
+    const vehicleUser = await User.findOne({ _id: vehicle.userId });
+
+    if (vehicleUser._id.toString() === loginUser._id.toString()) {
+        return NextResponse.json({ message: 'Succesfully found vehicle & owner' }, { status: 200 });
     }
 
     return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });

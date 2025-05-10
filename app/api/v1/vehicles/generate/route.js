@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { connectToMongoose } from '@/lib/db/connect';
-import Vehicle from '@/db/models';
+import connectToMongoose from '@/lib/db/connect';
+import { Vehicle } from '@/lib/db/models';
 
 await connectToMongoose();
 
 export async function GET(req) {
-    const vehicles = await getVehiclesCollection();
 
-    let newVehicleId = "ee32568f-0918-40db-b749-441a62c78e21";
+    let newVehicleId;
 
     if (!newVehicleId) {
         newVehicleId = uuidv4();
@@ -16,16 +15,20 @@ export async function GET(req) {
     }
 
     try {
-        await vehicles.insertOne({
+
+        const newVehicle = Vehicle({
             vehicleId: newVehicleId,
             userId: null,
-            deviceModel: "",
-            deviceDate: null,
-            createDate: new Date(),
-            updateDate: new Date(),
+            model: "",
+            purchasedDate: null,
+            registeredDate: null,
         });
+
+        await newVehicle.save();
+
+
         return NextResponse.json({ message: "Vehicle created with ID :", newVehicleId }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ error: 'Error creating vehicle with ID' }, { status: 400 });
+        return NextResponse.json({ error: 'Error creating vehicle with ID', detail: error.message }, { status: 400 });
     }
 }
