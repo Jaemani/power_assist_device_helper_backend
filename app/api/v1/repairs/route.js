@@ -35,10 +35,7 @@ export async function GET(req) {
   } catch {
     return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
   }
-  const repairs = await Repair
-    .find({ vehicleId: vid })
-    .sort({ repairedDate: -1 })
-    .lean();
+  const repairs = await Repair.find({ vehicleId: vid }).sort({ repairedDate: -1 }).lean();
   return NextResponse.json(repairs, { status: 200 });
 }
 
@@ -71,12 +68,12 @@ export async function POST(req) {
   } = await req.json();
   const doc = {
     vehicleId:          vid,
+    repairer:           userDoc._id.toString(),
+    repairStationCode:  userDoc.stationCode,
+    repairStationLabel: userDoc.stationLabel,
     repairedDate:       new Date(repairedDate),
     billingPrice,
     isAccident,
-    repairStationCode:  userDoc.stationCode,
-    repairStationLabel: userDoc.stationLabel,
-    repairer:           userDoc._id.toString(),
     repairCategories,
     batteryVoltage,
     etcRepairParts,
