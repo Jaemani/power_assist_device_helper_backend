@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import { User, Vehicle } from '@/lib/db/models';
+import { Users, Vehicles } from '@/lib/db/models';
 
 await connectToMongoose();
 
@@ -9,7 +9,7 @@ export async function GET(req, { params } ) {
     const { vehicleId } = await params;
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
 
-    const vehicle = await Vehicle.findOne({ vehicleId });
+    const vehicle = await Vehicles.findOne({ vehicleId });
 
     // 해당 vehicle이 존재하지 않은 경우
     if (!vehicle) return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
@@ -36,9 +36,10 @@ export async function GET(req, { params } ) {
         guid: ''
     };
 
-    const loginUser = await User.findOne({ firebaseUid: decoded.uid });
-    const vehicleUser = await User.findOne({ _id: vehicle.userId });
+    const loginUser = await Users.findOne({ firebaseUid: decoded.uid });
+    const vehicleUser = await Vehicles.findOne({ vehicleId }).populate('userId');
 
+    // front vehicleUser is to avoid null access
     if (vehicleUser && vehicleUser._id.toString() != loginUser._id.toString()) {
         return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
     }
@@ -48,7 +49,7 @@ export async function GET(req, { params } ) {
         userId: vehicleUser ? vehicleUser._id.toString() : "",
         vehicleId: vehicle.vehicleId,
         model: vehicle.model,
-        purchasedDate: vehicle.purchasedDate ? vehicle.purchasedDate.toString() : "",
-        registeredDate: vehicle.registeredDate ? vehicle.registeredDate.toString() : "",
+        purchasedDate: vehicle.purchasedDate ? vehicle.purchasedDate.toISOString() : "", // Date to ISOString
+        registeredDate: vehicle.registeredDate ? vehicle.registeredDate.toISOString() : "", // Date to ISOString
     }, { status: 200 });
 }

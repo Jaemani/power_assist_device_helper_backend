@@ -1,7 +1,7 @@
 import connectToMongoose from '@/lib/db/connect';
 import mongoose from 'mongoose';
 import admin from '@/lib/firebaseAdmin';
-import { Repair, User } from '@/lib/db/models';
+import { Repairs, Users } from '@/lib/db/models';
 import { NextResponse } from 'next/server';
 
 async function verifyIdToken(req) {
@@ -21,7 +21,7 @@ export async function GET(req) {
   await connectToMongoose();
   const decoded = await verifyIdToken(req);
   if (decoded instanceof Response) return decoded;
-  const userDoc = await User.findOne({ firebaseUid: decoded.uid }).lean();
+  const userDoc = await Users.findOne({ firebaseUid: decoded.uid }).lean();
   if (!userDoc) {
     return NextResponse.json({ error: 'Unauthorized: no such user' }, { status: 401 });
   }
@@ -43,7 +43,7 @@ export async function POST(req) {
   await connectToMongoose();
   const decoded = await verifyIdToken(req);
   if (decoded instanceof Response) return decoded;
-  const userDoc = await User.findOne({ firebaseUid: decoded.uid });
+  const userDoc = await Users.findOne({ firebaseUid: decoded.uid });
   if (!userDoc) {
     return NextResponse.json({ error: 'Unauthorized: no such user' }, { status: 401 });
   }
@@ -79,6 +79,6 @@ export async function POST(req) {
     etcRepairParts,
     memo
   };
-  const created = await Repair.create(doc);
+  const created = await Repairs.create(doc);
   return NextResponse.json(created, { status: 201 });
 }

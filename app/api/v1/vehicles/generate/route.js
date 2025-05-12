@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import connectToMongoose from '@/lib/db/connect';
-import { Vehicle } from '@/lib/db/models';
+import { Vehicles } from '@/lib/db/models';
 
 await connectToMongoose();
 
@@ -16,7 +16,7 @@ export async function GET(req) {
 
     try {
 
-        const newVehicle = Vehicle({
+        const newVehicle = Vehicles({
             vehicleId: newVehicleId,
             userId: null,
             model: "",
