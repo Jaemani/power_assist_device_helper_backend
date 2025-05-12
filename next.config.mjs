@@ -8,6 +8,15 @@ const nextConfig = {
       },
     ];
   },
+  // next.config.js
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({ "firebase-admin": "commonjs firebase-admin" });
+    }
+    return config;
+  },
+
 };
+
 
 export { nextConfig as default };
