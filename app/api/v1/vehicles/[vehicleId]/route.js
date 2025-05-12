@@ -22,10 +22,10 @@ export async function GET(req, { params } ) {
     // 세션유효 확인
     if (!req.headers.get('authorization')) return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
     else {
-        const idToken = req.headers.get('authorization').split("Bearer ")[1];
-        if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 401 });
+        const token = req.headers.get('authorization').split("Bearer ")[1];
+        if (!token) return NextResponse.json({ error: 'Missing firebase token' }, { status: 401 });
         try {
-            const decoded = await getAuth().verifyIdToken(idToken);
+            const decoded = await getAuth().verifytoken(token);
             if (!decoded) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
         } catch (error) {
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 });

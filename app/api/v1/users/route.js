@@ -11,13 +11,13 @@ await initializeFirebaseAdmin();
 export async function GET(req) {
     try {
         if (!req.headers.get('authorization')) return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
-        const idToken = req.headers.get('authorization').split("Bearer ")[1]; // Extract the token from the header
-        if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
+        const token = req.headers.get('authorization').split("Bearer ")[1]; // Extract the token from the header
+        if (!token) return NextResponse.json({ error: 'Missing firebase token' }, { status: 400 });
 
 
         let role;
         try {
-            const decoded = await getAuth().verifyIdToken(idToken);
+            const decoded = await getAuth().verifytoken(token);
             console.log('Decoded token:', decoded);
             role = decoded.role;
 
@@ -43,14 +43,14 @@ export async function GET(req) {
 export async function POST(req) {
     try {
         const authHeader = req.headers.authorization || "";
-        const idToken = authHeader.split("Bearer ")[1]; // Extract the token from the header
-        if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
+        const token = authHeader.split("Bearer ")[1]; // Extract the token from the header
+        if (!token) return NextResponse.json({ error: 'Missing firebase token' }, { status: 400 });
 
         const {name, model, purchasedAt, registeredAt, recipientType} = await req.json();
 
         let firebaseUid, phoneNumber;
         try {
-            const decoded = await getAuth().verifyIdToken(idToken);
+            const decoded = await getAuth().verifytoken(token);
             console.log('Decoded token:', decoded);
             firebaseUid = decoded.user_id;
             phoneNumber = decoded.phone_number;

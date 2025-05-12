@@ -4,14 +4,14 @@ import admin from '@/lib/firebaseAdmin';
 import { Repairs, Users } from '@/lib/db/models';
 import { NextResponse } from 'next/server';
 
-async function verifyIdToken(req) {
+async function verifytoken(req) {
   const auth = req.headers.get('authorization') || '';
   if (!auth.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
   }
-  const idToken = auth.split(' ')[1];
+  const token = auth.split(' ')[1];
   try {
-    return await admin.auth().verifyIdToken(idToken);
+    return await admin.auth().verifytoken(token);
   } catch {
     return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 });
   }
@@ -19,7 +19,7 @@ async function verifyIdToken(req) {
 
 export async function GET(req) {
   await connectToMongoose();
-  const decoded = await verifyIdToken(req);
+  const decoded = await verifytoken(req);
   if (decoded instanceof Response) return decoded;
   const userDoc = await Users.findOne({ firebaseUid: decoded.uid }).lean();
   if (!userDoc) {
@@ -41,7 +41,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   await connectToMongoose();
-  const decoded = await verifyIdToken(req);
+  const decoded = await verifytoken(req);
   if (decoded instanceof Response) return decoded;
   const userDoc = await Users.findOne({ firebaseUid: decoded.uid });
   if (!userDoc) {
