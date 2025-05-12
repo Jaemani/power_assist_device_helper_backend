@@ -32,7 +32,7 @@ export async function POST(req) {
             
             const user = await User.findOne({ firebaseUid });
             if (user) {
-                return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+                return NextResponse.json({ error: 'User already exists' }, { status: 409 });
             }
 
             const newUser = new User({
@@ -43,7 +43,12 @@ export async function POST(req) {
             });
             await newUser.save();
 
-            return NextResponse.json({ message: 'new User Registered!' }, { status: 200 });
+            return NextResponse.json({ 
+                userId: newUser._id.toString(), // newly generated ObjectId
+                phoneNumber: newUser.phoneNumber,
+                role: newUser.role,
+                guardianIds: newUser.guardianIds,
+            }, { status: 201 });
 
         } catch (error) {
             console.error('Error creating user:', error);

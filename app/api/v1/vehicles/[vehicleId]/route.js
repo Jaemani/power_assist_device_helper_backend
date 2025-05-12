@@ -4,17 +4,15 @@ import { User, Vehicle } from '@/lib/db/models';
 
 await connectToMongoose();
 
-export async function GET(req) {
-    const vehicleId = req.nextUrl.searchParams.get('vehicleId');
+
+export async function GET(req, { params } ) {
+    const { vehicleId } = await params;
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
 
     const vehicle = await Vehicle.findOne({ vehicleId });
 
     // 해당 vehicle이 존재하지 않은 경우
     if (!vehicle) return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
-
-    // 주인 없는 vehicle인 경우
-    if (!vehicle.userId) return NextResponse.json({ message: 'new QR with no owner' }, { status: 200 });
 
     // 주인이 있는 vehicle인 경우
     // 유저 본인인지, guardian인지 확인
@@ -41,9 +39,16 @@ export async function GET(req) {
     const loginUser = await User.findOne({ firebaseUid: decoded.uid });
     const vehicleUser = await User.findOne({ _id: vehicle.userId });
 
-    if (vehicleUser._id.toString() === loginUser._id.toString()) {
-        return NextResponse.json({ message: 'Succesfully found vehicle & owner' }, { status: 200 });
+    if (vehicleUser && vehicleUser._id.toString() != loginUser._id.toString()) {
+        return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
     }
 
-    return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
+    // no owner vehicle OR owner is the same as loginUser
+    return NextResponse.json({
+        userId: vehicleUser ? vehicleUser._id.toString() : "",
+        vehicleId: vehicle.vehicleId,
+        model: vehicle.model,
+        purchasedDate: vehicle.purchasedDate ? vehicle.purchasedDate.toString() : "",
+        registeredDate: vehicle.registeredDate ? vehicle.registeredDate.toString() : "",
+    }, { status: 200 });
 }
