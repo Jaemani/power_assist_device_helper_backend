@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import connectToMongoose from '@/lib/db/connect';
 import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import { getAuth } from 'firebase-admin/auth';
 
