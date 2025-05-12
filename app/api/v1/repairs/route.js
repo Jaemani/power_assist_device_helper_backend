@@ -1,7 +1,6 @@
 import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import connectToMongoose from '@/lib/db/connect';
-import mongoose from 'mongoose';
-import admin from '@/lib/firebaseAdmin';
+import { getAuth } from 'firebase-admin/auth';
 import { Repairs, Users, Vehicles } from '@/lib/db/models';
 import { NextResponse } from 'next/server';
 
