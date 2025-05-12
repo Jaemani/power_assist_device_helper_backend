@@ -26,6 +26,32 @@ export async function GET(req) {
 
         await newVehicle.save();
 
+        //         const vehicleIds = newVehicleId
+        //     .split('\n')
+        //     .map(id => id.trim())
+        //     .filter(id => id !== '');
+
+        // if (vehicleIds.length === 0) {
+        //     return NextResponse.json({ error: 'No vehicleIds provided' }, { status: 400 });
+        // }
+
+        // const insertedIds = [];
+
+        // for (const id of vehicleIds) {
+        //     const vehicleId = id || uuidv4(); // fallback in case of empty string
+
+        //     const newVehicle = new Vehicles({
+        //         vehicleId,
+        //         userId: null,
+        //         model: "",
+        //         purchasedAt: null,
+        //         registeredAt: null,
+        //     });
+
+        //     await newVehicle.save();
+        //     insertedIds.push(vehicleId);
+        // }
+
 
         return NextResponse.json({ message: "Vehicle created with ID :", newVehicleId }, { status: 200 });
     } catch (error) {
