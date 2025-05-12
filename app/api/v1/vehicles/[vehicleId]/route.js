@@ -43,7 +43,7 @@ export async function GET(req, { params } ) {
 
     // front vehicleUser, loginUser is to avoid null access
     if (vehicleUser && loginUser && vehicleUser._id.toString() != loginUser._id.toString()) {
-        return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
+        return NextResponse.json({ error: 'Not the vehicle owner' }, { status: 404 });
     }
 
     // no owner vehicle OR owner is the same as loginUser
