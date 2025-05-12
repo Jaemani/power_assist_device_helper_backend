@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
+import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import { Users, Vehicles } from '@/lib/db/models';
+import { getAuth } from 'firebase-admin/auth';
 
 await connectToMongoose();
-
+await initializeFirebaseAdmin();
 
 export async function GET(req, { params } ) {
     const { vehicleId } = await params;
@@ -17,24 +19,24 @@ export async function GET(req, { params } ) {
     // 주인이 있는 vehicle인 경우
     // 유저 본인인지, guardian인지 확인
 
-    // // 세션유효 확인
-    // if (!req.headers.get('authorization')) return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
-    // else {
-    //     const token = req.headers.get('authorization').split(' ')[1];
-    //     if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 401 });
-    //     try {
-    //         const decoded = verifyToken(token);
-    //         if (!decoded) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    //     } catch (error) {
-    //         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    //     }
-    // }
+    // 세션유효 확인
+    if (!req.headers.get('authorization')) return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
+    else {
+        const idToken = req.headers.get('authorization').split("Bearer ")[1];
+        if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 401 });
+        try {
+            const decoded = await getAuth().verifyIdToken(idToken);
+            if (!decoded) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        } catch (error) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
+    }
 
-    const decoded = { // dymmy data
-        firebaseUid: 'HpErhmIUaoc2q2v9yxkXjji375y2',
-        phoneNumber: '01012345678',
-        role: 'user'
-    };
+    // const decoded = { // dymmy data
+    //     firebaseUid: 'HpErhmIUaoc2q2v9yxkXjji375y2',
+    //     phoneNumber: '01012345678',
+    //     role: 'user'
+    // };
 
     const loginUser = await Users.findOne({ firebaseUid: decoded.uid });
     const vehicleUser = await Vehicles.findOne({ vehicleId }).populate('userId');

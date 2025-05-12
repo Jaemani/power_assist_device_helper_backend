@@ -2,23 +2,23 @@
 import 'dotenv/config';
 import { v4 as uuidv4 } from 'uuid';
 import connectToDatabase from '../db/connect.js';
-import User from '../lib/models/User.js';
-import Vehicle from '../lib/models/Vehicle.js';
-import RepairInfo from '../lib/models/RepairInfo.js';
-import RepairStation from '../lib/models/RepairStation.js';
+import Users from '../lib/models/User.js';
+import Vehicles from '../lib/models/Vehicle.js';
+import Repairs from '../lib/models/RepairInfo.js';
+import RepairStations from '../lib/models/RepairStation.js';
 
 async function seed() {
   await connectToDatabase();
 
   await Promise.all([
-    User.deleteMany({}),
-    Vehicle.deleteMany({}),
-    RepairInfo.deleteMany({}),
-    RepairStation.deleteMany({})
+    Users.deleteMany({}),
+    Vehicles.deleteMany({}),
+    Repairs.deleteMany({}),
+    RepairStations.deleteMany({})
   ]);
 
   const firebaseUid = uuidv4();
-  const user = await User.create({
+  const user = await Users.create({
     firebaseUid,
     phoneNumber: '010-1234-5678',
     role: 'user',
@@ -26,7 +26,7 @@ async function seed() {
     guardianIds: []
   });
 
-  const vehicle = await Vehicle.create({
+  const vehicle = await Vehicles.create({
     vehicleId: uuidv4(),
     userId: user._id,
     deviceModel: '정동휠체어 A100',
@@ -34,14 +34,14 @@ async function seed() {
   });
 
   const stationCode = 'SC001';
-  const station = await RepairStation.create({
+  const station = await RepairStations.create({
     repairStationCode: stationCode,
     repairStationId: uuidv4(),
     repairStationName: '서울장애인복지관 수리센터',
     passwd: 'password123'
   });
 
-  await RepairInfo.create({
+  await Repairs.create({
     vehicleId: vehicle._id,
     repairReceipt: [
       {

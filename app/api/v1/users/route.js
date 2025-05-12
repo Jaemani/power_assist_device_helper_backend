@@ -5,40 +5,71 @@ import { Users, Vehicles } from '@/lib/db/models';
 import { getAuth } from 'firebase-admin/auth';
 import mongoose from 'mongoose';
 
-// await connectToMongoose();
 await connectToMongoose();
 await initializeFirebaseAdmin();
 
+export async function GET(req) {
+    try {
+        if (!req.headers.get('authorization')) return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
+        const idToken = req.headers.get('authorization').split("Bearer ")[1]; // Extract the token from the header
+        if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
+
+
+        let role;
+        try {
+            const decoded = await getAuth().verifyIdToken(idToken);
+            console.log('Decoded token:', decoded);
+            role = decoded.role;
+
+        } catch (error) {
+            console.error('Error verifying ID token:', error);
+            return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 });
+        }
+
+        if(role === undefined || role === "") {
+            return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 }); // decoded but data not correct
+        }
+
+        return NextResponse.json({
+            role: role,
+        }, { status: 200 });
+
+    }catch (error) {
+        console.error('Error in GET function:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
 export async function POST(req) {
     try {
-        // const authHeader = req.headers.authorization || "";
-        // const idToken = authHeader.split("Bearer ")[1]; // Extract the token from the header
-        // if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
+        const authHeader = req.headers.authorization || "";
+        const idToken = authHeader.split("Bearer ")[1]; // Extract the token from the header
+        if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
 
         const {name, model, purchasedAt, registeredAt, recipientType} = await req.json();
 
-        // let firebaseUid, phoneNumber;
-        // try {
-        //     const decoded = await getAuth().verifyIdToken(idToken);
-        //     console.log('Decoded token:', decoded);
-        //     firebaseUid = decoded.user_id;
-        //     phoneNumber = decoded.phone_number;
+        let firebaseUid, phoneNumber;
+        try {
+            const decoded = await getAuth().verifyIdToken(idToken);
+            console.log('Decoded token:', decoded);
+            firebaseUid = decoded.user_id;
+            phoneNumber = decoded.phone_number;
 
-        // } catch (error) {
-        //     console.error('Error verifying ID token:', error);
-        //     return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 });
-        // } 
+        } catch (error) {
+            console.error('Error verifying ID token:', error);
+            return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 });
+        } 
 
 
         try {
-            // if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
-            //     return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 }); // decoded but data not correct
-            // }
+            if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
+                return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 }); // decoded but data not correct
+            }
             
-            // dummy decoded data
-            const firebaseUid = "test"
-            const phoneNumber = "01012345678"
-            const role = "user"
+            // // dummy decoded data
+            // const firebaseUid = "test"
+            // const phoneNumber = "01012345678"
+            // const role = "user"
 
             // find a random vehicle that has no owner
             const result = await Vehicles.aggregate([
