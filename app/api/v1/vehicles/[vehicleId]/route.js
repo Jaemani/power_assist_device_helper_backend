@@ -31,22 +31,22 @@ export async function GET(req, { params } ) {
     // }
 
     const decoded = { // dymmy data
-        uid: 'HpErhmIUaoc2q2v9yxkXjji375y2',
-        role: 'user',
-        guid: ''
+        firebaseUid: 'HpErhmIUaoc2q2v9yxkXjji375y2',
+        phoneNumber: '01012345678',
+        role: 'user'
     };
 
     const loginUser = await Users.findOne({ firebaseUid: decoded.uid });
     const vehicleUser = await Vehicles.findOne({ vehicleId }).populate('userId');
 
-    // front vehicleUser is to avoid null access
-    if (vehicleUser && vehicleUser._id.toString() != loginUser._id.toString()) {
+    // front vehicleUser, loginUser is to avoid null access
+    if (vehicleUser && loginUser && vehicleUser._id.toString() != loginUser._id.toString()) {
         return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
     }
 
     // no owner vehicle OR owner is the same as loginUser
     return NextResponse.json({
-        userId: vehicleUser ? vehicleUser._id.toString() : "",
+        userId: vehicleUser.userId ? vehicleUser.userId.toString() : "",
         vehicleId: vehicle.vehicleId,
         model: vehicle.model,
         purchasedAt: vehicle.purchasedAt ? vehicle.purchasedAt.toISOString() : "", // Date to ISOString
