@@ -20,8 +20,8 @@ export async function GET(req) {
             vehicleId: newVehicleId,
             userId: null,
             model: "",
-            purchasedDate: null,
-            registeredDate: null,
+            purchasedAt: null,
+            registeredAt: null,
         });
 
         await newVehicle.save();

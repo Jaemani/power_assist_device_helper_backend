@@ -14,7 +14,7 @@ export async function POST(req) {
         const idToken = authHeader.split("Bearer ")[1];
         if (!idToken) return NextResponse.json({ error: 'Missing firebase idToken' }, { status: 400 });
 
-        const {name, role, model, purchasedDate, registeredDate, recipientType} = await req.json();
+        const {name, role, model, purchasedAt, registeredAt, recipientType} = await req.json();
 
         let firebaseUid;
         try {
@@ -66,8 +66,8 @@ export async function POST(req) {
                 { $set: { 
                     userId:new mongoose.Types.ObjectId(newUser._id) , // newly generated ObjectId
                     model: model,
-                    purchasedDate: new Date(purchasedDate), // ISOString to Date
-                    registeredDate: new Date(registeredDate), // ISOString to Date
+                    purchasedAt: new Date(purchasedAt), // ISOString to Date
+                    registeredAt: new Date(registeredAt), // ISOString to Date
                  } } // update
             );
 

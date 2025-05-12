@@ -49,7 +49,7 @@ export async function GET(req, { params } ) {
         userId: vehicleUser ? vehicleUser._id.toString() : "",
         vehicleId: vehicle.vehicleId,
         model: vehicle.model,
-        purchasedDate: vehicle.purchasedDate ? vehicle.purchasedDate.toISOString() : "", // Date to ISOString
-        registeredDate: vehicle.registeredDate ? vehicle.registeredDate.toISOString() : "", // Date to ISOString
+        purchasedAt: vehicle.purchasedAt ? vehicle.purchasedAt.toISOString() : "", // Date to ISOString
+        registeredAt: vehicle.registeredAt ? vehicle.registeredAt.toISOString() : "", // Date to ISOString
     }, { status: 200 });
 }
