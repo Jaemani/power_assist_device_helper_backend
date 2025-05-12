@@ -21,22 +21,30 @@ export async function GET(req, { params }) {
   await connectToMongoose();
   const decoded = await verifytoken(req);
   if (decoded instanceof Response) return decoded;
+
   const userDoc = await Users.findOne({ firebaseUid: decoded.uid }).lean();
   if (!userDoc) {
     return NextResponse.json({ error: 'Unauthorized: no such user' }, { status: 401 });
   }
+
   const { vehicleId } = params;
   if (!vehicleId) {
     return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
   }
+
   const vehicleDoc = await Vehicles.findOne({ vehicleId }).lean();
   if (!vehicleDoc) {
     return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
   }
+
   if (!userDoc.vehicleIds?.map(id => id.toString()).includes(vehicleDoc._id.toString())) {
     return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
   }
-  const repairs = await Repairs.find({ vehicleId: vehicleDoc._id }).sort({ repairedDate: -1 }).lean();
+
+  const repairs = await Repairs.find({ vehicleId: vehicleDoc._id })
+    .sort({ repairedDate: -1 })
+    .lean();
+
   return NextResponse.json(repairs);
 }
 
@@ -44,21 +52,26 @@ export async function POST(req, { params }) {
   await connectToMongoose();
   const decoded = await verifytoken(req);
   if (decoded instanceof Response) return decoded;
+
   const userDoc = await Users.findOne({ firebaseUid: decoded.uid }).lean();
   if (!userDoc) {
     return NextResponse.json({ error: 'Unauthorized: no such user' }, { status: 401 });
   }
+
   const { vehicleId } = params;
   if (!vehicleId) {
     return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
   }
+
   const vehicleDoc = await Vehicles.findOne({ vehicleId }).lean();
   if (!vehicleDoc) {
     return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
   }
+
   if (!userDoc.vehicleIds?.map(id => id.toString()).includes(vehicleDoc._id.toString())) {
     return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
   }
+
   const {
     repairedDate,
     billingPrice,
@@ -69,6 +82,7 @@ export async function POST(req, { params }) {
     memo,
     repairer
   } = await req.json();
+
   if (
     !repairedDate ||
     typeof billingPrice !== 'number' ||
@@ -80,6 +94,7 @@ export async function POST(req, { params }) {
   ) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
+
   try {
     const newRepair = await Repairs.create({
       vehicleId: vehicleDoc._id,
