@@ -1,7 +1,7 @@
 import connectToMongoose from '@/lib/db/connect';
 import mongoose from 'mongoose';
 import admin from '@/lib/firebaseAdmin';
-import { Repairs, Users } from '@/lib/db/models';
+import { Repairs, Users, Vehicles } from '@/lib/db/models';
 import { NextResponse } from 'next/server';
 
 async function verifytoken(req) {
@@ -17,7 +17,7 @@ async function verifytoken(req) {
   }
 }
 
-export async function GET(req) {
+export async function GET(req, { params }) {
   await connectToMongoose();
   const decoded = await verifytoken(req);
   if (decoded instanceof Response) return decoded;
@@ -25,37 +25,39 @@ export async function GET(req) {
   if (!userDoc) {
     return NextResponse.json({ error: 'Unauthorized: no such user' }, { status: 401 });
   }
-  const vehicleId = req.nextUrl.searchParams.get('vehicleId');
+  const { vehicleId } = params;
   if (!vehicleId) {
     return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
   }
-  let vid;
-  try {
-    vid = new mongoose.Types.ObjectId(vehicleId);
-  } catch {
+  const vehicleDoc = await Vehicles.findOne({ vehicleId }).lean();
+  if (!vehicleDoc) {
     return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
   }
-  const repairs = await Repair.find({ vehicleId: vid }).sort({ repairedDate: -1 }).lean();
-  return NextResponse.json(repairs, { status: 200 });
+  if (!userDoc.vehicleIds?.map(id => id.toString()).includes(vehicleDoc._id.toString())) {
+    return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
+  }
+  const repairs = await Repairs.find({ vehicleId: vehicleDoc._id }).sort({ repairedDate: -1 }).lean();
+  return NextResponse.json(repairs);
 }
 
-export async function POST(req) {
+export async function POST(req, { params }) {
   await connectToMongoose();
   const decoded = await verifytoken(req);
   if (decoded instanceof Response) return decoded;
-  const userDoc = await Users.findOne({ firebaseUid: decoded.uid });
+  const userDoc = await Users.findOne({ firebaseUid: decoded.uid }).lean();
   if (!userDoc) {
     return NextResponse.json({ error: 'Unauthorized: no such user' }, { status: 401 });
   }
-  const vehicleId = new URL(req.url).searchParams.get('vehicleId');
+  const { vehicleId } = params;
   if (!vehicleId) {
     return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
   }
-  let vid;
-  try {
-    vid = new mongoose.Types.ObjectId(vehicleId);
-  } catch {
+  const vehicleDoc = await Vehicles.findOne({ vehicleId }).lean();
+  if (!vehicleDoc) {
     return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 400 });
+  }
+  if (!userDoc.vehicleIds?.map(id => id.toString()).includes(vehicleDoc._id.toString())) {
+    return NextResponse.json({ error: 'Forbidden: not the vehicle owner' }, { status: 403 });
   }
   const {
     repairedDate,
@@ -64,21 +66,36 @@ export async function POST(req) {
     repairCategories,
     batteryVoltage,
     etcRepairParts,
-    memo
+    memo,
+    repairer
   } = await req.json();
-  const doc = {
-    vehicleId:          vid,
-    repairer:           userDoc._id.toString(),
-    repairStationCode:  userDoc.stationCode,
-    repairStationLabel: userDoc.stationLabel,
-    repairedDate:       new Date(repairedDate),
-    billingPrice,
-    isAccident,
-    repairCategories,
-    batteryVoltage,
-    etcRepairParts,
-    memo
-  };
-  const created = await Repairs.create(doc);
-  return NextResponse.json(created, { status: 201 });
+  if (
+    !repairedDate ||
+    typeof billingPrice !== 'number' ||
+    typeof isAccident !== 'boolean' ||
+    !Array.isArray(repairCategories) ||
+    typeof batteryVoltage !== 'number' ||
+    (repairCategories.includes('기타') && !etcRepairParts) ||
+    typeof repairer !== 'string'
+  ) {
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  }
+  try {
+    const newRepair = await Repairs.create({
+      vehicleId: vehicleDoc._id,
+      repairer,
+      repairStationCode: userDoc.stationCode,
+      repairStationLabel: userDoc.stationLabel,
+      repairedDate: new Date(repairedDate),
+      billingPrice,
+      isAccident,
+      repairCategories,
+      batteryVoltage,
+      etcRepairParts,
+      memo
+    });
+    return NextResponse.json(newRepair, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: 'Error creating repair' }, { status: 500 });
+  }
 }
