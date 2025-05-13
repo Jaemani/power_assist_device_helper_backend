@@ -10,6 +10,7 @@ await connectToMongoose();
 
 export const POST = withAuth(async (req, ctx, decoded) => {
     try {
+        const {name, model, purchasedAt, registeredAt, recipientType} = await req.json();
         const firebaseUid = decoded.user_id;
         const phoneNumber = decoded.phone_number;
         const role = 'user'
