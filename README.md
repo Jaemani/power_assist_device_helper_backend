@@ -1,4 +1,8 @@
-# 🛠 수리수리 마수리 – 전동보장구 수리이력 관리 시스템
+#### [API - Swagger](https://app.swaggerhub.com/apis/Jaemani/Soorisoori/1.0.0)
+#### [API 명세서(비개발자용)](#api)
+#### [MongoDB Schema 명세서](#db)
+
+# <a name="top"></a>🛠 수리수리 마수리 – 전동보장구 수리이력 관리 시스템
 
 <div align="center">
 
@@ -117,7 +121,14 @@
 </div>  
 
 ---  
-# 📘 API 명세서 (비개발자용) - Soorisoori 시스템
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+# <a name="api"></a>📘 API 명세서 (비개발자용) - Soorisoori 시스템
 
 모든 API는 Firebase 로그인 이후에만 사용할 수 있습니다. 각 요청은 "사용자가 누굴까?"를 확인하기 위해 로그인 정보가 필요합니다.
 
@@ -140,7 +151,7 @@
 
 - **주소**: `/users/{vehicleId}`
 - **방식**: POST
-- **설명**: 사용자를 새로 등록하고, 차량과 연결합니다.
+- **설명**: 사용자를 새로 등록하고, vehicleId에 해당되는 차량과 연결합니다.
 - **필수 정보 (Body 안에 포함)**:
   - 이름(name)
   - 차량 모델명(model)
@@ -163,10 +174,10 @@
 
 - **주소**: `/vehicles/{vehicleId}`
 - **방식**: GET
-- **설명**: 차량에 연결된 사용자 정보와 기본 차량 정보를 확인합니다.
+- **설명**: 차량에 연결된 사용자 정보와 기본 차량 정보를 확인합니다. vehicleId를 제외한 항목들이 비어있다면 주인없는 vehicle
 - **성공 예시**:
 ```json
-{ "userId": "사용자 ID (없을 수도 있음)", "vehicleId": "abcd-1234", "model": "휠체어 3000", "purchasedAt": "2024-01-10T00:00:00.000Z", "registeredAt": "2024-02-10T00:00:00.000Z" }
+{ "userId": "사용자 ID", "vehicleId": "abcd-1234", "model": "휠체어 3000", "purchasedAt": "2024-01-10T00:00:00.000Z", "registeredAt": "2024-02-10T00:00:00.000Z" }
 ```
 - **실패 상황**:
   - 차량 ID가 잘못됨
@@ -196,13 +207,13 @@
 - **방식**: POST
 - **설명**: 차량의 새로운 수리 정보를 등록합니다.
 - **필수 정보**:
+  - 수리자 이름 (`repairer`) 
   - 수리일자 (`repairedDate`)
   - 수리비 (`billingPrice`)
   - 사고 여부 (`isAccident`: true/false)
   - 수리 항목 목록 (`repairCategories`: 예: ["타이어", "기타"])
-  - 배터리 전압 (`batteryVoltage`)
-  - 수리공 이름 (`repairer`)
-  - 기타 부품 이름 (`etcRepairParts`, 선택)
+  - 배터리 전압 (`batteryVoltage`) -- "배터리" 가 수리 항목 목록에서 선택되었을 경우
+  - 기타 수리내역 -- "기타" 가 수리 항목 목록에서 선택되었을 경우
   - 메모 (`memo`, 선택)
 - **성공 예시**:
 ```json
@@ -219,10 +230,10 @@
 
 - **주소**: `/repair-stations`
 - **방식**: GET
-- **설명**: 전국 수리센터의 목록을 가져옵니다. 위치 좌표도 포함되어 있어 지도에 표시할 수 있습니다.
+- **설명**: 전국 수리센터의 목록을 가져옵니다. 위치 좌표도 포함되어 있어 지도에 표시할 수 있습니다. (state: 도, city: 시, region: 구)
 - **성공 예시**:
 ```json
-{ "stations": [ { "code": "ST01", "state": "서울특별시", "city": "강남구", "region": "역삼동", "address": "서울시 강남구 테헤란로 123", "label": "강남보장구수리센터", "telephone": "02-1234-5678", "coordinate": [127.12345, 37.12345] } ] }
+{ "stations": [ { "code": "ST01", "state": "서울", "city": "서울", "region": "강남구", "address": "서울시 강남구 테헤란로 123", "label": "강남보장구수리센터", "telephone": "02-1234-5678", "coordinate": [127.12345, 37.12345] } ] }
 ```
 - **실패 상황**:
   - 서버 오류
@@ -237,3 +248,152 @@
 Authorization: Bearer <로그인한 사용자 토큰>
 ```
 - 브라우저에서는 자동 처리되며, 외부에서 테스트할 경우 위의 형식을 헤더에 추가합니다.
+
+---  
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+# <a name="db"></a> 🗂️ MongoDB Schema 명세서
+
+MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models/` 디렉토리에 정의되어 있음.
+
+---
+## 공통 Options
+- `timestamps: true` createdAt, updatedAt 관리를 위함
+- `versionKey: false` mongoose의 버전. package.json에서 확인 가능하므로 불필요한 field
+
+## 1. Users
+
+**Collection:** `users`  
+**File:** `Users.js`
+
+### Schema
+| Field         | Type                     | Required | Unique | Description                          |
+|---------------|--------------------------|----------|--------|--------------------------------------|
+| firebaseUid   | String                   | ✅       | ✅     | Firebase UID                         |
+| name          | String                   | ✅       |        | 사용자 이름                           |
+| phoneNumber   | String                   | ✅       |        | 전화번호                              |
+| role          | Enum(String)             | ❌       |        | ['user', 'admin', 'repairer', 'guardian'] (default: 'user') |
+| recipientType | Enum(String)             | ❌       |        | ['general', 'disabled', 'lowIncome'] (default: 'general') |
+| guardianIds   | [ObjectId] (ref: guardians) | ❌    |        | 보호자 관계 (N:1)                    |
+
+---
+
+## 2. Vehicles
+
+**Collection:** `vehicles`  
+**File:** `Vehicles.js`
+
+### Schema
+| Field         | Type                     | Required | Unique | Description                 |
+|---------------|--------------------------|----------|--------|-----------------------------|
+| vehicleId     | String                   | ✅       | ✅     | 차량 고유 ID               |
+| userId        | ObjectId (ref: users)    | ❌       |        | 차량 소유자 ID             |
+| model         | String                   | ❌       |        | 차량 모델명                |
+| purchasedAt   | Date                     | ❌       |        | 구매 일자                  |
+| registeredAt  | Date                     | ❌       |        | 등록 일자                  |
+
+---
+
+## 3. Repairs
+
+**Collection:** `repairs`  
+**File:** `Repairs.js`
+
+### Schema
+| Field              | Type                      | Required | Description                             |
+|--------------------|---------------------------|----------|-----------------------------------------|
+| vehicleId          | ObjectId (ref: vehicles)  | ✅       | 수리 대상 차량 ID                       |
+| repairedDate       | Date                      | ✅       | 수리 날짜                               |
+| billingPrice       | Number                    | ✅       | 수리 비용                               |
+| isAccident         | Boolean                   | ✅       | 사고 수리 여부                          |
+| repairStationCode  | String                    | ✅       | 수리센터 코드                           |
+| repairStationLabel | String                    | ✅       | 수리센터 라벨 (이름)                    |
+| repairer           | String                    | ❌       | 수리 기사 이름                          |
+| repairCategories   | [String]                    | ✅       | 수리 항목 목록 (CSV형태 문자열)         |
+| batteryVoltage     | Number                    | ❌       | 배터리 전압   - Categories에 '배터리' 포함된 경우           |
+| etcRepairParts     | String                    | ❌       | 기타 수리 부품     - Categories에 '기타' 포함된 경우                  |
+| memo               | String                    | ❌       | 관리자 메모                              |
+
+---
+
+## 4. RepairStations
+
+**Collection:** `repairstations`  
+**File:** `RepairStations.js`
+
+### Schema
+| Field         | Type                 | Required | Description                            |
+|---------------|----------------------|----------|----------------------------------------|
+| code          | String               | ✅       | 고유 수리센터 코드                     |
+| firebaseUid   | String               | ❌       | Firebase 인증자   - 사전에 등록되지 않은 수리소에는 계정이 없기 때문에 패스                 |
+| label         | String               | ✅       | 수리센터 명칭                          |
+| state         | String               | ✅       | 시/도                                  |
+| city          | String               | ✅       | 시/군/구                               |
+| region        | String               | ✅       | 지역 (ex. 역삼동)                      |
+| address       | String               | ✅       | 상세 주소                              |
+| telephone     | String               | ✅       | 전화번호                                |
+| coordinate    | GeoJSON Point        | ✅       | 좌표 정보 (type: 'Point', [lng, lat]) |
+
+### Indexes
+- `{ coordinate: '2dsphere' }` for geo queries
+
+---
+
+## 5. Guardians
+
+**Collection:** `guardians`  
+**File:** `Guardians.js`
+
+### Schema
+| Field       | Type                      | Required | Unique | Description                   |
+|-------------|---------------------------|----------|--------|-------------------------------|
+| firebaseUid | String                    | ✅       | ✅     | 보호자 Firebase UID           |
+| userId      | ObjectId (ref: users)     | ✅       |        | 보호자가 담당하는 사용자 ID  |
+
+---
+
+## 🔄 관계도 (ERD 요약)
+
+```text
+Users ---< Vehicles
+Users ---< Guardians
+Vehicles ---< Repairs
+Repairs >--- RepairStations (code/label only, not ObjectId)
+```
+
+- One `User` can own multiple `Vehicles`
+- One `Vehicle` can have multiple `Repairs`
+- One `User` can have multiple `Guardians`
+- `Repairs` reference `RepairStation` via `repairStationCode`/`label` (not strict ObjectId)
+
+---
+
+## 📁 파일 구성 위치
+
+```
+lib/
+└── db/
+    ├── connect.js
+    ├── models/
+    │   ├── Users.js
+    │   ├── Vehicles.js
+    │   ├── Repairs.js
+    │   ├── RepairStations.js
+    │   ├── Guardians.js
+    │   └── index.js
+```
+
+---
+
+
+
+---
+#### [맨 위로 이동](#top)
+#### [API - Swagger](https://app.swaggerhub.com/apis/Jaemani/Soorisoori/1.0.0)
+#### [API 명세서(비개발자용)](#api)
+#### [MongoDB Schema 명세서](#db)
