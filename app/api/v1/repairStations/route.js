@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
 import { RepairStations } from '@/lib/db/models'; 
-// import { withAuth } from '@/lib/auth/withAuth';
+import { withAuth } from '@/lib/auth/withAuth';
 
 await connectToMongoose();
 
-export const GET = async (req) => {
+export const GET = withAuth(async (req, ctx, decoded) => {
     try {
         const stations = await RepairStations.find().lean();
 
@@ -28,4 +28,4 @@ export const GET = async (req) => {
         console.error('Error in GET function:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-}
+});
