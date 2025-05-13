@@ -30,6 +30,15 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             // const phoneNumber = "01012345678"
             // const role = "user"
 
+            const user = await Users.findOne({ firebaseUid });
+            if (user) {
+                return new NextResponse(JSON.stringify({ error: 'User already exists' }), {
+                    status: 409,
+                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    credentials: "include",
+                });
+            }
+
             // find a vehicle
             const vehicle = await Vehicles.findOne({ vehicleId: vehicleId });
             if (!vehicle) {
@@ -43,15 +52,6 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             if (vehicle.userId !== null) {
                 return new NextResponse(JSON.stringify({ error: 'This Vehicle has an owner' }), {
                     status: 403,
-                    headers: getCorsHeaders(req.headers.get("origin") || ""),
-                    credentials: "include",
-                });
-            }
-
-            const user = await Users.findOne({ firebaseUid });
-            if (user) {
-                return new NextResponse(JSON.stringify({ error: 'User already exists' }), {
-                    status: 409,
                     headers: getCorsHeaders(req.headers.get("origin") || ""),
                     credentials: "include",
                 });
