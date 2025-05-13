@@ -4,9 +4,8 @@ import { Users, Vehicles } from '@/lib/db/models';
 import { withAuth } from '@/lib/auth/withAuth';
 
 await connectToMongoose();
-await initializeFirebaseAdmin();
 
-export const GET = withtAuth( async (req, { params }, decoded) => {
+export const GET = withAuth( async (req, { params }, decoded) => {
     const { vehicleId } = await params;
     const firebaseUid = decoded.uid;
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
