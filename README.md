@@ -114,3 +114,126 @@
   
   | 📘 [Notion Project Page](https://jaeman-hyu.notion.site/1c4ec4b6449b80bca4f2d6413eb7e8ef?pvs=74) | 🧾 [Presentation PDF(중간발표)](https://github.com/user-attachments/files/20057505/-.pdf)|
   |:---:|:---:|
+</div>  
+
+---  
+# 📘 API 명세서 (비개발자용) - Soorisoori 시스템
+
+모든 API는 Firebase 로그인 이후에만 사용할 수 있습니다. 각 요청은 "사용자가 누굴까?"를 확인하기 위해 로그인 정보가 필요합니다.
+
+---
+
+## 🔐 1. 사용자 역할 조회
+
+- **주소**: `/auth/role`
+- **방식**: GET
+- **설명**: 로그인한 사용자의 역할(role)을 알려줍니다.
+- **성공 예시**:
+```json
+{ "role": "user" }
+```
+- **실패 상황**: 로그인 정보가 잘못되었거나, 사용자가 존재하지 않음
+
+---
+
+## 👤 2. 사용자 등록 (차량과 연결)
+
+- **주소**: `/users/{vehicleId}`
+- **방식**: POST
+- **설명**: 사용자를 새로 등록하고, 차량과 연결합니다.
+- **필수 정보 (Body 안에 포함)**:
+  - 이름(name)
+  - 차량 모델명(model)
+  - 구매일자(purchasedAt) → 예: "2024-01-10T00:00:00.000Z"
+  - 등록일자(registeredAt)
+  - 수신자 유형(recipientType) → 예: "user"
+- **성공 예시**:
+```json
+{ "userId": "...", "name": "홍길동", "phoneNumber": "01012345678", "role": "user", "recipientType": "user", "vehicleId": "abcd-1234" }
+```
+- **실패 상황**:
+  - 해당 차량이 존재하지 않음
+  - 이미 해당 차량은 누군가가 등록함
+  - 이미 사용자로 등록된 전화번호임
+  - 로그인 정보가 유효하지 않음
+
+---
+
+## 🚘 3. 차량 정보 조회
+
+- **주소**: `/vehicles/{vehicleId}`
+- **방식**: GET
+- **설명**: 차량에 연결된 사용자 정보와 기본 차량 정보를 확인합니다.
+- **성공 예시**:
+```json
+{ "userId": "사용자 ID (없을 수도 있음)", "vehicleId": "abcd-1234", "model": "휠체어 3000", "purchasedAt": "2024-01-10T00:00:00.000Z", "registeredAt": "2024-02-10T00:00:00.000Z" }
+```
+- **실패 상황**:
+  - 차량 ID가 잘못됨
+  - 로그인한 사람이 해당 차량의 주인이 아님
+
+---
+
+## 🛠️ 4. 수리 이력 조회
+
+- **주소**: `/repairs/{vehicleId}`
+- **방식**: GET
+- **설명**: 차량의 모든 수리 내역을 가져옵니다. 가장 최근 수리가 먼저 나옵니다.
+- **성공 예시**:
+```json
+[ { "repairer": "홍수리기사", "repairStationCode": "ST01", "repairStationLabel": "강남수리센터", "repairedDate": "2024-12-12T00:00:00.000Z", "billingPrice": 15000, "isAccident": false, "repairCategories": ["타이어", "기타"], "batteryVoltage": 36.5, "etcRepairParts": "배터리 교체", "memo": "비상 수리" } ]
+```
+- **실패 상황**:
+  - 차량 ID가 잘못됨
+  - 로그인한 사람이 해당 차량의 주인이 아님
+  - 로그인 정보가 유효하지 않음
+
+---
+
+## 🛠️ 5. 수리 이력 등록
+
+- **주소**: `/repairs/{vehicleId}`
+- **방식**: POST
+- **설명**: 차량의 새로운 수리 정보를 등록합니다.
+- **필수 정보**:
+  - 수리일자 (`repairedDate`)
+  - 수리비 (`billingPrice`)
+  - 사고 여부 (`isAccident`: true/false)
+  - 수리 항목 목록 (`repairCategories`: 예: ["타이어", "기타"])
+  - 배터리 전압 (`batteryVoltage`)
+  - 수리공 이름 (`repairer`)
+  - 기타 부품 이름 (`etcRepairParts`, 선택)
+  - 메모 (`memo`, 선택)
+- **성공 예시**:
+```json
+{ "_id": "자동생성된수리ID", ... }
+```
+- **실패 상황**:
+  - 필수 항목이 빠졌거나 형식이 틀림
+  - 차량 주인이 아님
+  - 서버 오류
+
+---
+
+## 🧭 6. 수리센터 목록 조회
+
+- **주소**: `/repair-stations`
+- **방식**: GET
+- **설명**: 전국 수리센터의 목록을 가져옵니다. 위치 좌표도 포함되어 있어 지도에 표시할 수 있습니다.
+- **성공 예시**:
+```json
+{ "stations": [ { "code": "ST01", "state": "서울특별시", "city": "강남구", "region": "역삼동", "address": "서울시 강남구 테헤란로 123", "label": "강남보장구수리센터", "telephone": "02-1234-5678", "coordinate": [127.12345, 37.12345] } ] }
+```
+- **실패 상황**:
+  - 서버 오류
+
+---
+
+## 📌 인증 공통 사항
+
+- 모든 API 요청은 로그인 후 발급된 토큰을 사용해야 합니다.
+- 예시:  
+```
+Authorization: Bearer <로그인한 사용자 토큰>
+```
+- 브라우저에서는 자동 처리되며, 외부에서 테스트할 경우 위의 형식을 헤더에 추가합니다.
