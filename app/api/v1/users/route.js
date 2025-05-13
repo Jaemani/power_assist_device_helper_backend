@@ -3,6 +3,7 @@ import connectToMongoose from '@/lib/db/connect';
 import { Users, Vehicles } from '@/lib/db/models'; 
 import mongoose from 'mongoose';
 import { withAuth } from '@/lib/auth/withAuth';
+import { getAuth } from 'firebase-admin/auth'
 
 await connectToMongoose();
 
@@ -11,6 +12,7 @@ export const POST = withAuth(async (req, ctx, decoded) => {
     try {
         const firebaseUid = decoded.firebaseUid;
         const phoneNumber = decoded.phoneNumber;
+        const role = 'user'
 
         try {
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
@@ -49,6 +51,10 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             });
             
             await newUser.save();
+
+            //사용자 토큰에 user역할을 붙여줌
+            //ID 토큰에 role 커스텀 클레이 추가
+            await getAuth().setCustomUserClaims(firebaseUid, { role })
 
             await Vehicles.updateOne(
                 { _id: randomVehicle._id }, // filter
