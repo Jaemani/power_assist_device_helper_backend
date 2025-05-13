@@ -207,13 +207,13 @@
 - **방식**: POST
 - **설명**: 차량의 새로운 수리 정보를 등록합니다.
 - **필수 정보**:
+  - 수리자 이름 (`repairer`) 
   - 수리일자 (`repairedDate`)
   - 수리비 (`billingPrice`)
   - 사고 여부 (`isAccident`: true/false)
   - 수리 항목 목록 (`repairCategories`: 예: ["타이어", "기타"])
-  - 배터리 전압 (`batteryVoltage`)
-  - 수리공 이름 (`repairer`)
-  - 기타 부품 이름 (`etcRepairParts`, 선택)
+  - 배터리 전압 (`batteryVoltage`) -- "배터리" 가 수리 항목 목록에서 선택되었을 경우
+  - 기타 수리내역 -- "기타" 가 수리 항목 목록에서 선택되었을 경우
   - 메모 (`memo`, 선택)
 - **성공 예시**:
 ```json
