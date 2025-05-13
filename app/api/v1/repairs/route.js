@@ -1,57 +1,23 @@
-import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import connectToMongoose from '@/lib/db/connect';
-import { getAuth } from 'firebase-admin/auth';
 import { Repairs, Users, Vehicles } from '@/lib/db/models';
 import { NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/withAuth';
+import { getCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
-await initializeFirebaseAdmin();
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+export const GET = withAuth(async (req, { params }, decoded) => {
+  const origin = req.headers.get("origin") || "";
 
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: CORS_HEADERS
-  });
-}
-
-export async function GET(req, { params }) {
-  if (!req.headers.get('authorization')) {
-    return NextResponse.json(
-      { error: 'Missing authorization header' },
-      { status: 401, headers: CORS_HEADERS }
-    );
-  }
-  const token = req.headers.get('authorization').split("Bearer ")[1];
-  if (!token) {
-    return NextResponse.json(
-      { error: 'Missing firebase token' },
-      { status: 400, headers: CORS_HEADERS }
-    );
-  }
-
-  let firebaseUid;
-  try {
-    const decoded = await getAuth().verifyToken(token);
-    firebaseUid = decoded.user_id;
-  } catch (error) {
-    console.error('Error verifying ID token:', error);
-    return NextResponse.json(
-      { error: 'Invalid ID token' },
-      { status: 401, headers: CORS_HEADERS }
-    );
-  }
-
+  const firebaseUid = decoded.user_id;
   const userDoc = await Users.findOne({ firebaseUid }).lean();
   if (!userDoc) {
     return NextResponse.json(
       { error: 'Unauthorized: no such user' },
-      { status: 401, headers: CORS_HEADERS }
+      { 
+        status: 401,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }      
     );
   }
 
@@ -59,7 +25,10 @@ export async function GET(req, { params }) {
   if (!vehicleId) {
     return NextResponse.json(
       { error: 'Missing vehicleId' },
-      { status: 400, headers: CORS_HEADERS }
+      { 
+        status: 400,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      } 
     );
   }
 
@@ -67,9 +36,11 @@ export async function GET(req, { params }) {
   if (!vehicleDoc) {
     return NextResponse.json(
       { error: 'Invalid vehicleId' },
-      { status: 400, headers: CORS_HEADERS }
+      { status: 400,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
-  }s
+  }
 
   if (
     !userDoc.vehicleIds
@@ -78,7 +49,9 @@ export async function GET(req, { params }) {
   ) {
     return NextResponse.json(
       { error: 'Forbidden: not the vehicle owner' },
-      { status: 403, headers: CORS_HEADERS }
+      { status: 403,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
   }
 
@@ -87,32 +60,18 @@ export async function GET(req, { params }) {
     .lean();
 
   return NextResponse.json(repairs, { headers: CORS_HEADERS });
-}
+});
 
-export async function POST(req, { params }) {
-  await connectToMongoose();
-  const decoded = await verifytoken(req);
-  if (decoded instanceof NextResponse) {
-
-    decoded.headers.set('Access-Control-Allow-Origin', '*');
-    decoded.headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    decoded.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    return decoded;
-  }
-
-  const userDoc = await Users.findOne({ firebaseUid: decoded.uid }).lean();
-  if (!userDoc) {
-    return NextResponse.json(
-      { error: 'Unauthorized: no such user' },
-      { status: 401, headers: CORS_HEADERS }
-    );
-  }
+export const POST = withAuth(async (req, { params }, decoded) => {
+  const origin = req.headers.get("origin") || "";
 
   const { vehicleId } = params;
   if (!vehicleId) {
     return NextResponse.json(
       { error: 'Missing vehicleId' },
-      { status: 400, headers: CORS_HEADERS }
+      { status: 400,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
   }
 
@@ -120,7 +79,9 @@ export async function POST(req, { params }) {
   if (!vehicleDoc) {
     return NextResponse.json(
       { error: 'Invalid vehicleId' },
-      { status: 400, headers: CORS_HEADERS }
+      { status: 400,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
   }
 
@@ -131,7 +92,9 @@ export async function POST(req, { params }) {
   ) {
     return NextResponse.json(
       { error: 'Forbidden: not the vehicle owner' },
-      { status: 403, headers: CORS_HEADERS }
+      { status: 403,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
   }
 
@@ -157,7 +120,9 @@ export async function POST(req, { params }) {
   ) {
     return NextResponse.json(
       { error: 'Invalid payload' },
-      { status: 400, headers: CORS_HEADERS }
+      { status: 400,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
   }
 
@@ -175,11 +140,24 @@ export async function POST(req, { params }) {
       etcRepairParts,
       memo
     });
-    return NextResponse.json(newRepair, { status: 201, headers: CORS_HEADERS });
+    return NextResponse.json(newRepair, { 
+        status: 201,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      });
   } catch {
     return NextResponse.json(
       { error: 'Error creating repair' },
-      { status: 500, headers: CORS_HEADERS }
+      { status: 500,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+      }
     );
   }
+});
+
+export async function OPTIONS(req) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req.headers.get("origin") || ""),
+    
+  });
 }
