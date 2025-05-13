@@ -20,7 +20,7 @@ async function testPost() {
     batteryVoltage: 48.0,
     etcRepairParts: '배터리 교체',
     memo: 'Node.js 테스트',
-    repairer: '박수리'
+    repairer: '정수리'
   };
   const res = await fetch(`${BASE}/${VEHICLE_ID}`, {
     method: 'POST',
