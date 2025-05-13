@@ -24,7 +24,7 @@ export const GET = withAuth(async (req, ctx, decoded) => {
         return NextResponse.json({
             stations: simplified,
         }, { status: 200,
-            headers: getCorsHeaders(),
+            headers: getCorsHeaders(req.headers.get(origin) || ""),
         });
     }catch (error) {
         console.error('Error in GET function:', error);
