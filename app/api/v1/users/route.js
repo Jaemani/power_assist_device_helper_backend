@@ -71,16 +71,12 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 name,
                 firebaseUid, // from decoded token
                 phoneNumber, // from decoded token
-                role, // from decoded token
+                role, // default role = 'user'
                 recipientType,
                 guardianIds: [], // array of ObjectId, empty at first. type by manager manually later
             });
             
             await newUser.save();
-
-            //사용자 토큰에 user역할을 붙여줌
-            //ID 토큰에 role 커스텀 클레이 추가
-            await getAuth().setCustomUserClaims(firebaseUid, { role })
 
             await Vehicles.updateOne(
                 { _id: vehicle._id }, // filter

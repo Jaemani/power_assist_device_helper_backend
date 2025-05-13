@@ -15,7 +15,6 @@ export const GET = withAuth( async (req, { params }, decoded) => {
         return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
             status: 404,
             headers: getCorsHeaders(origin),
-            credentials: "include",
         });
     }
     const vehicle = await Vehicles.findOne({ vehicleId });
@@ -25,7 +24,6 @@ export const GET = withAuth( async (req, { params }, decoded) => {
         return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
             status: 404,
             headers: getCorsHeaders(origin),
-            credentials: "include",
         });
     }
     // 주인이 있는 vehicle인 경우
@@ -46,7 +44,6 @@ export const GET = withAuth( async (req, { params }, decoded) => {
         return new NextResponse(JSON.stringify({ error: 'Not the vehicle owner' }), {
             status: 403,
             headers: getCorsHeaders(origin),
-            credentials: "include",
         });
     }
 
@@ -60,7 +57,6 @@ export const GET = withAuth( async (req, { params }, decoded) => {
     }, {
         status: 200,
         headers: getCorsHeaders(origin),
-        credentials: "include",
     });
 });
 
@@ -68,7 +64,6 @@ export async function OPTIONS(req) {
   const origin = req.headers.get("origin") || "";
   return new NextResponse(null, {
     status: 204,
-    headers: getCorsHeaders(origin),
-    credentials: "include",
+    headers: getCorsHeaders(origin),s
   });
 }
