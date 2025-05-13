@@ -16,20 +16,28 @@ export const GET = withAuth(async (req, ctx, decoded) => {
             city: station.city,
             region: station.region,
             address: station.address,
-            label: station.label,
+            label: station.name,
             telephone: station.telephone,
             coordinate: station.coordinate.coordinates, // [lng, lat] 만 전달
         }));
 
         return NextResponse.json({
             stations: simplified,
-        }, { status: 200 });
-
+        }, { status: 200,
+            headers: getCorsHeaders(),
+        });
     }catch (error) {
         console.error('Error in GET function:', error);
         return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
             status: 500,
-            headers: getCorsHeaders(origin),
+            headers: getCorsHeaders(req.headers.get(origin) || ""),
         });
     }
 });
+
+export async function OPTIONS(req) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req.headers.get("origin") || ""),
+  });
+}

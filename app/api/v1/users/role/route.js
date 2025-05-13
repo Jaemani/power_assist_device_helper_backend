@@ -33,9 +33,8 @@ export const GET = withAuth(async (req, ctx, decoded) => {
 });
 
 export async function OPTIONS(req) {
-  const origin = req.headers.get("origin") || "";
   return new NextResponse(null, {
     status: 204,
-    headers: getCorsHeaders(origin),
+    headers: getCorsHeaders(req.headers.get("origin") || ""),
   });
 }

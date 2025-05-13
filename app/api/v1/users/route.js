@@ -10,8 +10,8 @@ await connectToMongoose();
 
 
 export const POST = withAuth(async (req, { params }, decoded) => {
+    const origin = req.headers.get("origin") || "";
     try {
-
         const body = await req.json();
         const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = body;
         const firebaseUid = decoded.user_id;
@@ -22,7 +22,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
                 return new NextResponse(JSON.stringify({ error: 'Invalid ID token' }), {
                     status: 401,
-                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    headers: getCorsHeaders(origin),
                     
                 });
             }
@@ -32,7 +32,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             if (user) {
                 return new NextResponse(JSON.stringify({ error: 'User already exists' }), {
                     status: 409,
-                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    headers: getCorsHeaders(origin),
                     
                 });
             }
@@ -40,7 +40,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             if (Object.keys(body).length === 0) {
                 return new NextResponse(JSON.stringify({ message: 'new User' }), {
                     status: 200,
-                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    headers: getCorsHeaders(origin),
                 });
             }
             // // dummy decoded data
@@ -53,7 +53,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             if (!vehicle) {
                 return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
                     status: 404,
-                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    headers: getCorsHeaders(origin),
                     
                 });
             }
@@ -61,7 +61,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             if (vehicle.userId !== null) {
                 return new NextResponse(JSON.stringify({ error: 'This Vehicle has an owner' }), {
                     status: 403,
-                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    headers: getCorsHeaders(origin),
                     
                 });
             }
@@ -97,14 +97,14 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 vehicleId: vehicle.vehicleId,
             }, { 
                 status: 201,
-                headers: getCorsHeaders(req.headers.get("origin") || "") 
+                headers: getCorsHeaders(origin) 
             });
 
         } catch (error) {
             console.error('Error creating user:', error);
             return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
                 status: 500,
-                headers: getCorsHeaders(req.headers.get("origin") || ""),
+                headers: getCorsHeaders(origin),
                 
             });
         }
@@ -113,16 +113,15 @@ export const POST = withAuth(async (req, { params }, decoded) => {
         console.error('Error in POST function:', error);
         return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
             status: 500,
-            headers: getCorsHeaders(req.headers.get("origin") || ""),
+            headers: getCorsHeaders(origin),
             
         });
     }
 });
 
 export async function OPTIONS(req) {
-  return new NextResponse(null, {
-    status: 204,
-    headers: getCorsHeaders(req.headers.get("origin") || ""),
-    
-  });
+    return new NextResponse(null, {
+        status: 204,
+        headers: getCorsHeaders(req.headers.get("origin") || ""),
+    });
 }
