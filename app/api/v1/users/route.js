@@ -25,7 +25,7 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             // const phoneNumber = "01012345678"
             // const role = "user"
 
-            // find a random vehicle that has no owner
+            // find a vehicle
             const vehicle = await Vehicles.findOne({ vehicleId: vehicleId });
             if (!vehicle) {
                 return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 404 });
@@ -57,7 +57,7 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             await getAuth().setCustomUserClaims(firebaseUid, { role })
 
             await Vehicles.updateOne(
-                { _id: randomVehicle._id }, // filter
+                { _id: vehicle._id }, // filter
                 { $set: { 
                     userId:new mongoose.Types.ObjectId(newUser._id.toString()) , // newly generated user's ObjectId
                     model: model,
@@ -72,7 +72,7 @@ export const POST = withAuth(async (req, ctx, decoded) => {
                 phoneNumber: newUser.phoneNumber,
                 role: newUser.role,
                 recipientType: newUser.recipientType,
-                vehicleId: randomVehicle.vehicleId,
+                vehicleId: vehicle.vehicleId,
             }, { status: 201 });
 
         } catch (error) {
