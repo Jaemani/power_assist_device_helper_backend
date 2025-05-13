@@ -1,5 +1,6 @@
-#### [API 명세서(비개발자용](#api)
-#### [DB 스키마 명세서(비개발자용](#db)
+#### [API - Swagger](https://app.swaggerhub.com/apis/Jaemani/Soorisoori/1.0.0)
+#### [API 명세서(비개발자용)](#api)
+#### [MongoDB Schema 명세서](#db)
 
 # <a name="top"></a>🛠 수리수리 마수리 – 전동보장구 수리이력 관리 시스템
 
@@ -150,7 +151,7 @@
 
 - **주소**: `/users/{vehicleId}`
 - **방식**: POST
-- **설명**: 사용자를 새로 등록하고, 차량과 연결합니다.
+- **설명**: 사용자를 새로 등록하고, vehicleId에 해당되는 차량과 연결합니다.
 - **필수 정보 (Body 안에 포함)**:
   - 이름(name)
   - 차량 모델명(model)
@@ -173,10 +174,10 @@
 
 - **주소**: `/vehicles/{vehicleId}`
 - **방식**: GET
-- **설명**: 차량에 연결된 사용자 정보와 기본 차량 정보를 확인합니다.
+- **설명**: 차량에 연결된 사용자 정보와 기본 차량 정보를 확인합니다. vehicleId를 제외한 항목들이 비어있다면 주인없는 vehicle
 - **성공 예시**:
 ```json
-{ "userId": "사용자 ID (없을 수도 있음)", "vehicleId": "abcd-1234", "model": "휠체어 3000", "purchasedAt": "2024-01-10T00:00:00.000Z", "registeredAt": "2024-02-10T00:00:00.000Z" }
+{ "userId": "사용자 ID", "vehicleId": "abcd-1234", "model": "휠체어 3000", "purchasedAt": "2024-01-10T00:00:00.000Z", "registeredAt": "2024-02-10T00:00:00.000Z" }
 ```
 - **실패 상황**:
   - 차량 ID가 잘못됨
@@ -256,128 +257,143 @@ Authorization: Bearer <로그인한 사용자 토큰>
 <br>
 <br>
 
-# <a name="db"></a>🗂️ Soorisoori MongoDB 스키마 명세서 (비개발자용)
+# <a name="db"></a> 🗂️ MongoDB Schema 명세서
 
-이 문서는 Soorisoori 시스템에서 사용하는 데이터베이스 컬렉션 구조를 비개발자도 이해할 수 있도록 설명한 자료입니다. 각 "컬렉션"은 일종의 테이블이며, 각각 사용자, 차량, 수리기록, 수리센터, 보호자 정보를 담고 있습니다.
+MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models/` 디렉토리에 정의되어 있음.
+
+---
+## 공통 Options
+- `timestamps: true` createdAt, updatedAt 관리를 위함
+- `versionKey: false` mongoose의 버전. package.json에서 확인 가능하므로 불필요한 field
+
+## 1. Users
+
+**Collection:** `users`  
+**File:** `Users.js`
+
+### Schema
+| Field         | Type                     | Required | Unique | Description                          |
+|---------------|--------------------------|----------|--------|--------------------------------------|
+| firebaseUid   | String                   | ✅       | ✅     | Firebase UID                         |
+| name          | String                   | ✅       |        | 사용자 이름                           |
+| phoneNumber   | String                   | ✅       |        | 전화번호                              |
+| role          | Enum(String)             | ❌       |        | ['user', 'admin', 'repairer', 'guardian'] (default: 'user') |
+| recipientType | Enum(String)             | ❌       |        | ['general', 'disabled', 'lowIncome'] (default: 'general') |
+| guardianIds   | [ObjectId] (ref: guardians) | ❌    |        | 보호자 관계 (N:1)                    |
 
 ---
 
-## 👤 Users (사용자)
+## 2. Vehicles
 
-### 설명
-앱에 로그인한 사용자 (장비 소유자). 한 명의 사용자는 여러 대의 차량이나 보호자와 연결될 수 있습니다.
+**Collection:** `vehicles`  
+**File:** `Vehicles.js`
 
-### 주요 필드
-| 필드명 | 설명 | 예시 |
-|--------|------|------|
-| firebaseUid | Firebase에서 제공하는 사용자 고유 ID | "abcd1234" |
-| name | 사용자 이름 | "홍길동" |
-| phoneNumber | 전화번호 | "01012345678" |
-| role | 사용자 역할 | "user" / "admin" / "repairer" / "guardian" |
-| recipientType | 수신자 유형 | "general" / "disabled" / "lowIncome" |
-| guardianIds | 연결된 보호자 ID 목록 | ["ObjectId1", "ObjectId2"] |
-
----
-
-## 🚘 Vehicles (차량)
-
-### 설명
-전동보장구(휠체어 등)의 정보를 담고 있는 컬렉션입니다. 각 차량은 특정 사용자와 연결됩니다.
-
-### 주요 필드
-| 필드명 | 설명 | 예시 |
-|--------|------|------|
-| vehicleId | 차량 고유 ID | "VH123456" |
-| userId | 이 차량을 사용하는 사용자 ID | "ObjectId" |
-| model | 차량 모델명 | "휠체어-3000" |
-| purchasedAt | 구매 일자 | "2023-01-10T00:00:00.000Z" |
-| registeredAt | 등록 일자 | "2023-02-01T00:00:00.000Z" |
+### Schema
+| Field         | Type                     | Required | Unique | Description                 |
+|---------------|--------------------------|----------|--------|-----------------------------|
+| vehicleId     | String                   | ✅       | ✅     | 차량 고유 ID               |
+| userId        | ObjectId (ref: users)    | ❌       |        | 차량 소유자 ID             |
+| model         | String                   | ❌       |        | 차량 모델명                |
+| purchasedAt   | Date                     | ❌       |        | 구매 일자                  |
+| registeredAt  | Date                     | ❌       |        | 등록 일자                  |
 
 ---
 
-## 🛠 Repairs (수리 기록)
+## 3. Repairs
 
-### 설명
-차량의 수리 이력을 기록하는 컬렉션입니다. 수리는 차량 단위로 등록됩니다.
+**Collection:** `repairs`  
+**File:** `Repairs.js`
 
-### 주요 필드
-| 필드명 | 설명 | 예시 |
-|--------|------|------|
-| vehicleId | 수리한 차량 ID (Vehicles 컬렉션 참조) | "ObjectId" |
-| repairedDate | 수리 날짜 | "2024-12-12T00:00:00.000Z" |
-| billingPrice | 수리 비용 | 15000 |
-| isAccident | 사고 여부 | true / false |
-| repairStationCode | 수리센터 코드 | "ST01" |
-| repairStationLabel | 수리센터 이름 | "강남센터" |
-| repairer | 수리 기사 이름 | "김정비" |
-| repairCategories | 수리 항목 | "타이어, 배터리" |
-| batteryVoltage | 배터리 전압 | 36.5 |
-| etcRepairParts | 기타 부품 내용 | "전선 교체" |
-| memo | 메모 | "긴급 수리 요청" |
-
----
-
-## 🧭 RepairStations (수리센터)
-
-### 설명
-전국 수리센터의 정보 및 위치 좌표를 포함하는 컬렉션입니다. 지도 연동에 활용됩니다.
-
-### 주요 필드
-| 필드명 | 설명 | 예시 |
-|--------|------|------|
-| code | 수리센터 고유 코드 | "ST01" |
-| firebaseUid | 수리센터 관리자 Firebase UID | "xyz123" |
-| label | 수리센터 명칭 | "강남보장구수리센터" |
-| state | 시/도 | "서울특별시" |
-| city | 시/군/구 | "강남구" |
-| region | 지역 | "역삼동" |
-| address | 상세주소 | "서울시 강남구 테헤란로 123" |
-| telephone | 전화번호 | "02-1234-5678" |
-| coordinate | 위치 정보 (경도, 위도) | [127.0276, 37.4979] |
-
-> 🧭 `coordinate`는 GeoJSON 형식의 포인트(Point)로 저장되며, 지도 검색에 사용됩니다.
+### Schema
+| Field              | Type                      | Required | Description                             |
+|--------------------|---------------------------|----------|-----------------------------------------|
+| vehicleId          | ObjectId (ref: vehicles)  | ✅       | 수리 대상 차량 ID                       |
+| repairedDate       | Date                      | ✅       | 수리 날짜                               |
+| billingPrice       | Number                    | ✅       | 수리 비용                               |
+| isAccident         | Boolean                   | ✅       | 사고 수리 여부                          |
+| repairStationCode  | String                    | ✅       | 수리센터 코드                           |
+| repairStationLabel | String                    | ✅       | 수리센터 라벨 (이름)                    |
+| repairer           | String                    | ❌       | 수리 기사 이름                          |
+| repairCategories   | [String]                    | ✅       | 수리 항목 목록 (CSV형태 문자열)         |
+| batteryVoltage     | Number                    | ❌       | 배터리 전압   - Categories에 '배터리' 포함된 경우           |
+| etcRepairParts     | String                    | ❌       | 기타 수리 부품     - Categories에 '기타' 포함된 경우                  |
+| memo               | String                    | ❌       | 관리자 메모                              |
 
 ---
 
-## 👥 Guardians (보호자)
+## 4. RepairStations
 
-### 설명
-사용자를 보조하는 보호자 정보를 담고 있습니다. 보호자는 사용자 1명과 연결됩니다.
+**Collection:** `repairstations`  
+**File:** `RepairStations.js`
 
-### 주요 필드
-| 필드명 | 설명 | 예시 |
-|--------|------|------|
-| firebaseUid | 보호자 Firebase UID | "abcd9876" |
-| userId | 연결된 사용자 ID | "ObjectId" |
+### Schema
+| Field         | Type                 | Required | Description                            |
+|---------------|----------------------|----------|----------------------------------------|
+| code          | String               | ✅       | 고유 수리센터 코드                     |
+| firebaseUid   | String               | ❌       | Firebase 인증자   - 사전에 등록되지 않은 수리소에는 계정이 없기 때문에 패스                 |
+| label         | String               | ✅       | 수리센터 명칭                          |
+| state         | String               | ✅       | 시/도                                  |
+| city          | String               | ✅       | 시/군/구                               |
+| region        | String               | ✅       | 지역 (ex. 역삼동)                      |
+| address       | String               | ✅       | 상세 주소                              |
+| telephone     | String               | ✅       | 전화번호                                |
+| coordinate    | GeoJSON Point        | ✅       | 좌표 정보 (type: 'Point', [lng, lat]) |
 
----
-
-## 📌 컬렉션 간 관계 요약
-
-- `Users` 1 ↔ N `Vehicles` (1명의 사용자는 여러 대의 차량을 가질 수 있음)
-- `Vehicles` 1 ↔ N `Repairs` (1대의 차량은 여러 번 수리될 수 있음)
-- `Users` 1 ↔ N `Guardians` (보호자는 사용자를 보조)
-- `Repairs` N ↔ 1 `RepairStations` (수리는 하나의 센터에서 발생함)
-
----
-
-## ⛓ 관계도 요약 예시 (자연어)
-
-- "홍길동" 사용자는 `휠체어 A`와 연결되어 있고,  
-  이 휠체어는 2024년 3월에 "강남보장구수리센터"에서 수리를 받았으며,  
-  보호자 계정이 1개 연결되어 있다.
+### Indexes
+- `{ coordinate: '2dsphere' }` for geo queries
 
 ---
 
-## 🧩 DB 연결 정보 (서버에서만 사용됨)
+## 5. Guardians
 
-- 데이터베이스는 MongoDB Atlas를 사용하며, 연결 주소는 환경변수(`.env`)로 관리됩니다.
-- 예시 형식:
+**Collection:** `guardians`  
+**File:** `Guardians.js`
+
+### Schema
+| Field       | Type                      | Required | Unique | Description                   |
+|-------------|---------------------------|----------|--------|-------------------------------|
+| firebaseUid | String                    | ✅       | ✅     | 보호자 Firebase UID           |
+| userId      | ObjectId (ref: users)     | ✅       |        | 보호자가 담당하는 사용자 ID  |
+
+---
+
+## 🔄 관계도 (ERD 요약)
+
+```text
+Users ---< Vehicles
+Users ---< Guardians
+Vehicles ---< Repairs
+Repairs >--- RepairStations (code/label only, not ObjectId)
 ```
-mongodb+srv://[사용자명]:[비밀번호]@[클러스터주소]/[DB명]?retryWrites=true&w=majority
+
+- One `User` can own multiple `Vehicles`
+- One `Vehicle` can have multiple `Repairs`
+- One `User` can have multiple `Guardians`
+- `Repairs` reference `RepairStation` via `repairStationCode`/`label` (not strict ObjectId)
+
+---
+
+## 📁 파일 구성 위치
+
 ```
+lib/
+└── db/
+    ├── connect.js
+    ├── models/
+    │   ├── Users.js
+    │   ├── Vehicles.js
+    │   ├── Repairs.js
+    │   ├── RepairStations.js
+    │   ├── Guardians.js
+    │   └── index.js
+```
+
+---
+
+
 
 ---
 #### [맨 위로 이동](#top)
-#### [API 명세서(비개발자용](#api)
-#### [DB 스키마 명세서(비개발자용](#db)
+#### [API - Swagger](https://app.swaggerhub.com/apis/Jaemani/Soorisoori/1.0.0)
+#### [API 명세서(비개발자용)](#api)
+#### [MongoDB Schema 명세서](#db)
