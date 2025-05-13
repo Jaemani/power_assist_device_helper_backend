@@ -20,7 +20,8 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
                 return new NextResponse(JSON.stringify({ error: 'Invalid ID token' }), {
                     status: 401,
-                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    credentials: "include",
                 });
             }
             
@@ -34,14 +35,16 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             if (!vehicle) {
                 return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
                     status: 404,
-                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    credentials: "include",
                 });
             }
 
             if (vehicle.userId !== null && vehicle.userId !== undefined || vehicle.userId !== "") {
                 return new NextResponse(JSON.stringify({ error: 'This Vehicle has an owner' }), {
                     status: 403,
-                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    credentials: "include",
                 });
             }
 
@@ -49,7 +52,8 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             if (user) {
                 return new NextResponse(JSON.stringify({ error: 'User already exists' }), {
                     status: 409,
-                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                    headers: getCorsHeaders(req.headers.get("origin") || ""),
+                    credentials: "include",
                 });
             }
 
@@ -95,7 +99,8 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             console.error('Error creating user:', error);
             return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
                 status: 500,
-                headers: getCorsHeaders(req.headers.get("origin") || "")
+                headers: getCorsHeaders(req.headers.get("origin") || ""),
+                credentials: "include",
             });
         }
 
@@ -103,7 +108,8 @@ export const POST = withAuth(async (req, ctx, decoded) => {
         console.error('Error in POST function:', error);
         return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
             status: 500,
-            headers: getCorsHeaders(req.headers.get("origin") || "")
+            headers: getCorsHeaders(req.headers.get("origin") || ""),
+            credentials: "include",
         });
     }
 });
@@ -111,6 +117,7 @@ export const POST = withAuth(async (req, ctx, decoded) => {
 export async function OPTIONS(req) {
   return new NextResponse(null, {
     status: 204,
-    headers: getCorsHeaders(req.headers.get("origin") || "")
+    headers: getCorsHeaders(req.headers.get("origin") || ""),
+    credentials: "include",
   });
 }

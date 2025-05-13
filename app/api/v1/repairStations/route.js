@@ -27,6 +27,9 @@ export const GET = withAuth(async (req, ctx, decoded) => {
 
     }catch (error) {
         console.error('Error in GET function:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+            status: 500,
+            headers: getCorsHeaders(origin),
+        });
     }
 });
