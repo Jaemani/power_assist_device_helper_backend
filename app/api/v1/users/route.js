@@ -9,7 +9,7 @@ import { getCorsHeaders } from '@/lib/cors';
 await connectToMongoose();
 
 
-export const POST = withAuth(async (req, ctx, decoded) => {
+export const POST = withAuth(async (req, { params }, decoded) => {
     try {
         const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = await req.json();
         const firebaseUid = decoded.user_id;
@@ -40,7 +40,7 @@ export const POST = withAuth(async (req, ctx, decoded) => {
                 });
             }
 
-            if (vehicle.userId !== null && vehicle.userId !== undefined || vehicle.userId !== "") {
+            if (vehicle.userId !== null) {
                 return new NextResponse(JSON.stringify({ error: 'This Vehicle has an owner' }), {
                     status: 403,
                     headers: getCorsHeaders(req.headers.get("origin") || ""),

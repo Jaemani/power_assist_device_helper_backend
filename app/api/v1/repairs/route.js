@@ -69,7 +69,7 @@ export async function GET(req, { params }) {
       { error: 'Invalid vehicleId' },
       { status: 400, headers: CORS_HEADERS }
     );
-  }
+  }s
 
   if (
     !userDoc.vehicleIds
