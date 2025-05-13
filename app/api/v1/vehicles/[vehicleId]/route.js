@@ -39,10 +39,10 @@ export const GET = withAuth( async (req, { params }, decoded) => {
     // };
 
     const loginUser = await Users.findOne({ firebaseUid: firebaseUid });
-    const vehicleUser = await Vehicles.findOne({ vehicleId }).populate('userId');
+    const vehicleUserId = vehicle?.userId
 
-    // front vehicleUser, loginUser is to avoid null access
-    if (vehicleUser && loginUser && vehicleUser._id.toString() != loginUser._id.toString()) {
+    // front vehicleUserId, loginUser is to avoid null access
+    if (vehicleUserId && loginUser && vehicleUserId.toString() != loginUser._id.toString()) {
         return new NextResponse(JSON.stringify({ error: 'Not the vehicle owner' }), {
             status: 403,
             headers: getCorsHeaders(origin),
@@ -52,7 +52,7 @@ export const GET = withAuth( async (req, { params }, decoded) => {
 
     // no owner vehicle OR owner is the same as loginUser
     return NextResponse.json({
-        userId: vehicleUser.userId ? vehicleUser.userId.toString() : "",
+        userId: vehicleUserId ? vehicleUserId.toString() : "",
         vehicleId: vehicle.vehicleId,
         model: vehicle.model,
         purchasedAt: vehicle.purchasedAt ? vehicle.purchasedAt.toISOString() : "", // Date to ISOString
