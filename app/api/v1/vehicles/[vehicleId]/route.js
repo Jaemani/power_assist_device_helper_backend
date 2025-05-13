@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
 import { Users, Vehicles } from '@/lib/db/models';
 import { withAuth } from '@/lib/auth/withAuth';
+import { setCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
 
 export const GET = withAuth( async (req, { params }, decoded) => {
+    setCorsHeaders(req);
     const { vehicleId } = await params;
     const firebaseUid = decoded.user_id;
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });

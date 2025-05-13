@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
 import { RepairStations } from '@/lib/db/models'; 
 import { withAuth } from '@/lib/auth/withAuth';
+import { setCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
 
 export const GET = withAuth(async (req, ctx, decoded) => {
+    setCorsHeaders(req);
     try {
         const stations = await RepairStations.find().lean();
 

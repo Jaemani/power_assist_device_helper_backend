@@ -4,11 +4,13 @@ import { Users, Vehicles } from '@/lib/db/models';
 import mongoose from 'mongoose';
 import { withAuth } from '@/lib/auth/withAuth';
 import { getAuth } from 'firebase-admin/auth'
+import { setCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
 
 
 export const POST = withAuth(async (req, ctx, decoded) => {
+    setCorsHeaders(req);
     try {
         const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = await req.json();
         const firebaseUid = decoded.user_id;
