@@ -10,7 +10,7 @@ await connectToMongoose();
 
 export const POST = withAuth(async (req, ctx, decoded) => {
     try {
-        const {name, model, purchasedAt, registeredAt, recipientType} = await req.json();
+        const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = await req.json();
         const firebaseUid = decoded.user_id;
         const phoneNumber = decoded.phone_number;
         const role = 'user'
@@ -26,15 +26,14 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             // const role = "user"
 
             // find a random vehicle that has no owner
-            const result = await Vehicles.aggregate([
-                { $match: { userId: null } },
-                { $sample: { size: 1 } }
-            ]);
-            const randomVehicle = result[0];
-            if (!randomVehicle) {
-                return NextResponse.json({ error: 'No available vehicleId found' }, { status: 404 });
+            const vehicle = await Vehicles.findOne({ vehicleId: vehicleId });
+            if (!vehicle) {
+                return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 404 });
             }
 
+            if (vehicle.userId !== null && vehicle.userId !== undefined || vehicle.userId !== "") {
+                return NextResponse.json({ error: 'This Vehicle has an owner' }, { status: 403 });
+            }
 
             const user = await Users.findOne({ firebaseUid });
             if (user) {
