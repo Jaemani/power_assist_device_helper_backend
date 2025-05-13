@@ -7,7 +7,7 @@ await connectToMongoose();
 
 export const GET = withAuth( async (req, { params }, decoded) => {
     const { vehicleId } = await params;
-    const firebaseUid = decoded.uid;
+    const firebaseUid = decoded.user_id;
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
 
     const vehicle = await Vehicles.findOne({ vehicleId });
