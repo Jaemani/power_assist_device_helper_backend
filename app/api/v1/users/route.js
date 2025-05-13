@@ -4,13 +4,12 @@ import { Users, Vehicles } from '@/lib/db/models';
 import mongoose from 'mongoose';
 import { withAuth } from '@/lib/auth/withAuth';
 import { getAuth } from 'firebase-admin/auth'
-import { setCorsHeaders } from '@/lib/cors';
+import { getCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
 
 
 export const POST = withAuth(async (req, ctx, decoded) => {
-    setCorsHeaders(req);
     try {
         const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = await req.json();
         const firebaseUid = decoded.user_id;
@@ -19,7 +18,10 @@ export const POST = withAuth(async (req, ctx, decoded) => {
 
         try {
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
-                return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 }); // decoded but data not correct
+                return new NextResponse(JSON.stringify({ error: 'Invalid ID token' }), {
+                    status: 401,
+                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                });
             }
             
             // // dummy decoded data
@@ -30,16 +32,25 @@ export const POST = withAuth(async (req, ctx, decoded) => {
             // find a vehicle
             const vehicle = await Vehicles.findOne({ vehicleId: vehicleId });
             if (!vehicle) {
-                return NextResponse.json({ error: 'Invalid vehicleId' }, { status: 404 });
+                return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
+                    status: 404,
+                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                });
             }
 
             if (vehicle.userId !== null && vehicle.userId !== undefined || vehicle.userId !== "") {
-                return NextResponse.json({ error: 'This Vehicle has an owner' }, { status: 403 });
+                return new NextResponse(JSON.stringify({ error: 'This Vehicle has an owner' }), {
+                    status: 403,
+                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                });
             }
 
             const user = await Users.findOne({ firebaseUid });
             if (user) {
-                return NextResponse.json({ error: 'User already exists' }, { status: 409 });
+                return new NextResponse(JSON.stringify({ error: 'User already exists' }), {
+                    status: 409,
+                    headers: getCorsHeaders(req.headers.get("origin") || "")
+                });
             }
 
             // new user
@@ -75,15 +86,31 @@ export const POST = withAuth(async (req, ctx, decoded) => {
                 role: newUser.role,
                 recipientType: newUser.recipientType,
                 vehicleId: vehicle.vehicleId,
-            }, { status: 201 });
+            }, { 
+                status: 201,
+                headers: getCorsHeaders(req.headers.get("origin") || "") 
+            });
 
         } catch (error) {
             console.error('Error creating user:', error);
-            return NextResponse.json({ error: 'Error creating user' }, { status: 500 });
+            return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+                status: 500,
+                headers: getCorsHeaders(req.headers.get("origin") || "")
+            });
         }
 
     }catch (error) {
         console.error('Error in POST function:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+            status: 500,
+            headers: getCorsHeaders(req.headers.get("origin") || "")
+        });
     }
 });
+
+export async function OPTIONS(req) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req.headers.get("origin") || "")
+  });
+}
