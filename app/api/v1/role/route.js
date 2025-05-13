@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/withAuth';
 
-await initializeFirebaseAdmin();
-
 export const GET = withAuth(async (req, ctx, decoded) => {
     try {
         const role = decoded.role; // Extract the role from the decoded token
