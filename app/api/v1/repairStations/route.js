@@ -16,7 +16,7 @@ export const GET = withAuth(async (req, ctx, decoded) => {
             city: station.city,
             region: station.region,
             address: station.address,
-            label: station.name,
+            label: station.label,
             telephone: station.telephone,
             coordinate: station.coordinate.coordinates, // [lng, lat] 만 전달
         }));
