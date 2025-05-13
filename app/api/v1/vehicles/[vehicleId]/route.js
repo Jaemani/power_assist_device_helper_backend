@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import { Users, Vehicles } from '@/lib/db/models';
-import { getAuth } from 'firebase-admin/auth';
+import { withAuth } from '@/lib/auth/withAuth';
 
 await connectToMongoose();
 await initializeFirebaseAdmin();
 
-export async function GET(req, { params } ) {
+export const GET = withtAuth( async (req, { params }, decoded) => {
     const { vehicleId } = await params;
+    const firebaseUid = decoded.uid;
     if (!vehicleId) return NextResponse.json({ error: 'Missing vehicleId' }, { status: 400 });
 
     const vehicle = await Vehicles.findOne({ vehicleId });
@@ -19,18 +19,6 @@ export async function GET(req, { params } ) {
     // 주인이 있는 vehicle인 경우
     // 유저 본인인지, guardian인지 확인
 
-    // 세션유효 확인
-    if (!req.headers.get('authorization')) return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
-    else {
-        const token = req.headers.get('authorization').split("Bearer ")[1];
-        if (!token) return NextResponse.json({ error: 'Missing firebase token' }, { status: 401 });
-        try {
-            const decoded = await getAuth().verifytoken(token);
-            if (!decoded) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-        } catch (error) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-        }
-    }
 
     // const decoded = { // dymmy data
     //     firebaseUid: 'HpErhmIUaoc2q2v9yxkXjji375y2',
@@ -38,7 +26,7 @@ export async function GET(req, { params } ) {
     //     role: 'user'
     // };
 
-    const loginUser = await Users.findOne({ firebaseUid: decoded.uid });
+    const loginUser = await Users.findOne({ firebaseUid: firebaseUid });
     const vehicleUser = await Vehicles.findOne({ vehicleId }).populate('userId');
 
     // front vehicleUser, loginUser is to avoid null access
@@ -54,4 +42,4 @@ export async function GET(req, { params } ) {
         purchasedAt: vehicle.purchasedAt ? vehicle.purchasedAt.toISOString() : "", // Date to ISOString
         registeredAt: vehicle.registeredAt ? vehicle.registeredAt.toISOString() : "", // Date to ISOString
     }, { status: 200 });
-}
+});

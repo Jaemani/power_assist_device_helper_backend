@@ -1,33 +1,16 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import initializeFirebaseAdmin from '@/lib/firebaseAdmin';
 import { Users, Vehicles } from '@/lib/db/models'; 
-import { getAuth } from 'firebase-admin/auth';
 import mongoose from 'mongoose';
+import { withAuth } from '@/lib/auth/withAuth';
 
 await connectToMongoose();
-await initializeFirebaseAdmin();
 
-export async function POST(req) {
+
+export const POST = withAuth(async (req, ctx, decoded) => {
     try {
-        const authHeader = req.headers.authorization || "";
-        const token = authHeader.split("Bearer ")[1]; // Extract the token from the header
-        if (!token) return NextResponse.json({ error: 'Missing firebase token' }, { status: 400 });
-
-        const {name, model, purchasedAt, registeredAt, recipientType} = await req.json();
-
-        let firebaseUid, phoneNumber;
-        try {
-            const decoded = await getAuth().verifytoken(token);
-            console.log('Decoded token:', decoded);
-            firebaseUid = decoded.user_id;
-            phoneNumber = decoded.phone_number;
-
-        } catch (error) {
-            console.error('Error verifying ID token:', error);
-            return NextResponse.json({ error: 'Invalid ID token' }, { status: 401 });
-        } 
-
+        const firebaseUid = decoded.firebaseUid;
+        const phoneNumber = decoded.phoneNumber;
 
         try {
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
@@ -95,4 +78,4 @@ export async function POST(req) {
         console.error('Error in POST function:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-}
+});
