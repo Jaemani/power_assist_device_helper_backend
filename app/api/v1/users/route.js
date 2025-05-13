@@ -10,8 +10,8 @@ await connectToMongoose();
 
 export const POST = withAuth(async (req, ctx, decoded) => {
     try {
-        const firebaseUid = decoded.firebaseUid;
-        const phoneNumber = decoded.phoneNumber;
+        const firebaseUid = decoded.user_id;
+        const phoneNumber = decoded.phone_number;
         const role = 'user'
 
         try {
