@@ -31,7 +31,8 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             const user = await Users.findOne({ firebaseUid });
 
             if (user) {
-                console.log("Response users/ User exsist. " + firebaseUid ? firebaseUid.toString() : "No firebase uid");
+                console.log("Response users/ User exsist. ")
+                console.log(firebaseUid ? firebaseUid.toString() : "No firebase uid");
                 return new NextResponse(JSON.stringify({ error: 'User already exists' }), {
                     status: 409,
                     headers: getCorsHeaders(origin),
@@ -40,7 +41,8 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             }
             
             if (Object.keys(body).length === 0) {
-                console.log("Response users/ is new User. " + firebaseUid ? firebaseUid.toString() : "No firebase uid");
+                console.log("Response users/ is new User. ")
+                console.log(firebaseUid ? firebaseUid.toString() : "No firebase uid");
                 return new NextResponse(JSON.stringify({ message: 'new User' }), {
                     status: 200,
                     headers: getCorsHeaders(origin),
@@ -80,7 +82,8 @@ export const POST = withAuth(async (req, { params }, decoded) => {
             });
             
             await newUser.save();
-            console.log("Response users/ new User created. " + firebaseUid ? firebaseUid.toString() : "no Firebase uid");
+            console.log("Response users/ new User created. ")
+            console.log(firebaseUid ? firebaseUid.toString() : "no Firebase uid");
             console.log(newUser);
 
             await Vehicles.updateOne(
@@ -93,7 +96,8 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                  } } // update
             );
 
-            console.log("Response users/ Vehicle updated. " + vehicle ? vehicle._id.toString() : "no vehicle id");
+            console.log("Response users/ Vehicle updated. ")
+            console.log(vehicle ? vehicle._id.toString() : "no vehicle id");
             return NextResponse.json({ 
                 userId: newUser._id.toString(), // ourput newly generated ObjectId
                 name: newUser.name,
