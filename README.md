@@ -278,8 +278,10 @@ MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models
 | name          | String                   | ✅       |        | 사용자 이름                           |
 | phoneNumber   | String                   | ✅       |        | 전화번호                              |
 | role          | Enum(String)             | ❌       |        | ['user', 'admin', 'repairer', 'guardian'] (default: 'user') |
-| recipientType | Enum(String)             | ❌       |        | ['general', 'disabled', 'lowIncome'] (default: 'general') |
+| recipientType | Enum(String)             | ✅       |        | ['general', 'lowIncomme', 'walfare', 'unregistered']|
 | guardianIds   | [ObjectId] (ref: guardians) | ❌    |        | 보호자 관계 (N:1)                    |
+  
+사용자 유형의 경우 대부분 이용자가 복지관에 등록된 장애인(일반, 차상위, 수급)이며, 드물게 등록되지 않은 비장애인분이 수리를 받으시는 경우 미등록으로 분류한다.
 
 ---
 
@@ -292,10 +294,10 @@ MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models
 | Field         | Type                     | Required | Unique | Description                 |
 |---------------|--------------------------|----------|--------|-----------------------------|
 | vehicleId     | String                   | ✅       | ✅     | 차량 고유 ID               |
-| userId        | ObjectId (ref: users)    | ❌       |        | 차량 소유자 ID             |
-| model         | String                   | ❌       |        | 차량 모델명                |
-| purchasedAt   | Date                     | ❌       |        | 구매 일자                  |
-| registeredAt  | Date                     | ❌       |        | 등록 일자                  |
+| userId        | ObjectId (ref: users)    | ❌       |        | 차량 소유자 ID  (default: null)           |
+| model         | String                   | ❌       |        | 차량 모델명 (default: "")               |
+| purchasedAt   | Date                     | ❌       |        | 구매 일자  (default: null)                |
+| registeredAt  | Date                     | ❌       |        | 등록 일자   (default: null)              |
 
 ---
 
@@ -313,11 +315,11 @@ MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models
 | isAccident         | Boolean                   | ✅       | 사고 수리 여부                          |
 | repairStationCode  | String                    | ✅       | 수리센터 코드                           |
 | repairStationLabel | String                    | ✅       | 수리센터 라벨 (이름)                    |
-| repairer           | String                    | ❌       | 수리 기사 이름                          |
+| repairer           | String                    | ✅       | 수리 기사 이름                          |
 | repairCategories   | [String]                    | ✅       | 수리 항목 목록 (CSV형태 문자열)         |
 | batteryVoltage     | Number                    | ❌       | 배터리 전압   - Categories에 '배터리' 포함된 경우           |
 | etcRepairParts     | String                    | ❌       | 기타 수리 부품     - Categories에 '기타' 포함된 경우                  |
-| memo               | String                    | ❌       | 관리자 메모                              |
+| memo               | String                    | ❌       | 관리자 메모 또는 수리 상세내역                              |
 
 ---
 
@@ -327,17 +329,17 @@ MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models
 **File:** `RepairStations.js`
 
 ### Schema
-| Field         | Type                 | Required | Description                            |
-|---------------|----------------------|----------|----------------------------------------|
-| code          | String               | ✅       | 고유 수리센터 코드                     |
-| firebaseUid   | String               | ❌       | Firebase 인증자   - 사전에 등록되지 않은 수리소에는 계정이 없기 때문에 패스                 |
-| label         | String               | ✅       | 수리센터 명칭                          |
-| state         | String               | ✅       | 시/도                                  |
-| city          | String               | ✅       | 시/군/구                               |
-| region        | String               | ✅       | 지역 (ex. 역삼동)                      |
-| address       | String               | ✅       | 상세 주소                              |
-| telephone     | String               | ✅       | 전화번호                                |
-| coordinate    | GeoJSON Point        | ✅       | 좌표 정보 (type: 'Point', [lng, lat]) |
+| Field         | Type                 | Required | Unique | Description                            |
+|---------------|----------------------|----------|----------|----------------------------------------|
+| code          | String               | ✅       |✅| 개발자가 부여한 고유 수리센터 코드                     |
+| firebaseUid   | String               | ❌       |✅| Firebase 인증자   - 사전에 등록되지 않은 수리소에는 계정이 없기 때문에 required: false                 |
+| label         | String               | ✅       || 수리센터 명칭                          |
+| state         | String               | ✅       || 시/도                                  |
+| city          | String               | ✅       || 시/군/구                               |
+| region        | String               | ✅       || 지역 (ex. 역삼동)                      |
+| address       | String               | ✅       || 상세 주소                              |
+| telephone     | String               | ✅       || 전화번호                                |
+| coordinate    | GeoJSON Point        | ✅       || 좌표 정보 (type: 'Point', [lng, lat]) |
 
 ### Indexes
 - `{ coordinate: '2dsphere' }` for geo queries
