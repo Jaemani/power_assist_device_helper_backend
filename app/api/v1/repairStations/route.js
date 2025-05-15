@@ -18,7 +18,7 @@ export const GET = withAuth(async (req, ctx, decoded) => {
             address: station.address,
             label: station.name,
             telephone: station.telephone,
-            coordinate: station.coordinate.coordinates, // [lng, lat] 만 전달
+            coordinate: station.location.coordinates,  // [lng, lat]
         }));
 
         return NextResponse.json({
