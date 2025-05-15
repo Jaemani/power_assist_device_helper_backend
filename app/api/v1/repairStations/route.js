@@ -24,13 +24,13 @@ export const GET = withAuth(async (req, ctx, decoded) => {
         return NextResponse.json({
             stations: simplified,
         }, { status: 200,
-            headers: getCorsHeaders(req.headers.get(origin) || ""),
+            headers: getCorsHeaders(req.headers.get("origin") || ""),
         });
     }catch (error) {
         console.error('Error in GET function:', error);
         return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
             status: 500,
-            headers: getCorsHeaders(req.headers.get(origin) || ""),
+            headers: getCorsHeaders(req.headers.get("origin") || ""),
         });
     }
 });
