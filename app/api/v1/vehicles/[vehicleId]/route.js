@@ -9,7 +9,7 @@ await connectToMongoose();
 export const GET = withAuth( async (req, { params }, decoded) => {
     const origin = req.headers.get("origin") || "";
     
-    const { vehicleId } = await params;
+    const { vehicleId } = params;
     console.log("GET vehicles/" + vehicleId);
     const firebaseUid = decoded.user_id;
     if (!vehicleId) {
