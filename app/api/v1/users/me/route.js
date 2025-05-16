@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import Users from '@/lib/models/User';
+import Users from '@/lib/db/models/User';
 import { withAuth } from '@/lib/auth/withAuth';
 import { getCorsHeaders } from '@/lib/cors';
 
