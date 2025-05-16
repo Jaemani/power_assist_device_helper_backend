@@ -1,0 +1,54 @@
+import { NextResponse } from 'next/server';
+import connectToMongoose from '@/lib/db/connect';
+import Users from '@/lib/db/models/Users';
+import { SelfChecks } from '@/lib/db/models';
+import { withAuth } from '@/lib/auth/withAuth';
+import { sendSms } from '@/lib/sms';
+import { getCorsHeaders } from '@/lib/cors';
+
+await connectToMongoose();
+
+export async function OPTIONS(req) {
+  const origin = req.headers.get('origin') || '';
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(origin),
+  });
+}
+
+export const POST = withAuth(async (req, { params }, decoded) => {
+  const origin = req.headers.get('origin') || '';
+  const { vehicleId } = params;
+  const { abnormal, detail } = await req.json();
+
+  const user = await Users.findOne({ firebaseUid: decoded.user_id });
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, {
+      status: 404,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
+  // 2) DB에 자가점검 기록 저장
+  await SelfChecks.create({
+    vehicleId,
+    userId:    user._id,
+    abnormal,
+    detail,
+    checkedAt: new Date(),
+  });
+
+  // 3) 이상 있고 동의된 사용자만 SMS 전송
+  if (abnormal && user.smsConsent) {
+    const text = `⚠️ 자가점검 이상 알림
+차량ID: ${vehicleId}
+사용자: ${user.name}
+상세: ${detail || '없음'}`;
+    await sendSms(process.env.MANAGER_PHONE, text);
+  }
+
+  return NextResponse.json({ success: true }, {
+    status: 200,
+    headers: getCorsHeaders(origin),
+  });
+});
