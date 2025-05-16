@@ -41,7 +41,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
   // 3) 이상 있고 동의된 사용자만 SMS 전송
   if (abnormal && user.smsConsent) {
     const text = `⚠️ 자가점검 이상 알림
-차량ID: ${vehicleId}
+전동보장구ID: ${vehicleId}
 사용자: ${user.name}
 상세: ${detail || '없음'}`;
     await sendSms(process.env.MANAGER_PHONE, text);
