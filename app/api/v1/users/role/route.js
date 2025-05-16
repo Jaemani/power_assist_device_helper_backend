@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/withAuth';
 import { getCorsHeaders } from '@/lib/cors';
 import connectToMongoose from '@/lib/db/connect';
-import Users from '@/lib/db/models/Users';
+import Users from '@/lib/db/models';
 
 await connectToMongoose();
 
