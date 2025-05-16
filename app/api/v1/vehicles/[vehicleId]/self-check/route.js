@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import Users from '@/lib/db/models/Users';
+import { Users } from '@/lib/db/models';
 import { SelfChecks } from '@/lib/db/models';
 import { withAuth } from '@/lib/auth/withAuth';
 import { sendSms } from '@/lib/sms';
