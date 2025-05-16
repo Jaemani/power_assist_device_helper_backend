@@ -21,15 +21,16 @@ export const POST = withAuth(async (req, { params }, decoded) => {
   const { vehicleId } = params;
   const { abnormal, detail } = await req.json();
 
+  // — 로그인 유저 조회
   const user = await Users.findOne({ firebaseUid: decoded.user_id });
   if (!user) {
-    return NextResponse.json({ error: 'User not found' }, {
-      status: 404,
-      headers: getCorsHeaders(origin),
-    });
+    return NextResponse.json(
+      { error: 'User not found' },
+      { status: 404, headers: getCorsHeaders(origin) }
+    );
   }
 
-  // 2) DB에 자가점검 기록 저장
+  // — DB에 자가점검 기록 저장
   await SelfChecks.create({
     vehicleId,
     userId:    user._id,
@@ -38,17 +39,18 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     checkedAt: new Date(),
   });
 
-  // 3) 이상 있고 동의된 사용자만 SMS 전송
+  // — 이상 감지 & 동의된 경우에만 SMS 전송
   if (abnormal && user.smsConsent) {
     const text = `⚠️ 자가점검 이상 알림
 전동보장구ID: ${vehicleId}
 사용자: ${user.name}
 상세: ${detail || '없음'}`;
-    await sendSms(process.env.MANAGER_PHONE, text);
+    await sendSms(text, process.env.MANAGER_PHONE);
   }
 
-  return NextResponse.json({ success: true }, {
-    status: 200,
-    headers: getCorsHeaders(origin),
-  });
+  // — 성공 응답
+  return NextResponse.json(
+    { success: true },
+    { status: 200, headers: getCorsHeaders(origin) }
+  );
 });
