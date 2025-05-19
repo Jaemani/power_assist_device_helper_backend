@@ -9,7 +9,7 @@ export async function POST(request) {
 
     await connectToMongoose();
     const origin = request.headers.get("origin") || "";
-    
+
     try {
         const { id, password } = await request.json();
 
@@ -27,6 +27,7 @@ export async function POST(request) {
         // Compare hashed password
         
         const isMatch = await bcrypt.compare(password + process.env.PEPPER, admin.password);
+
         if (!isMatch) {
             return NextResponse.json(
             { success: false, message: 'Invalid credentials or not an admin' },
@@ -44,6 +45,7 @@ export async function POST(request) {
         const token = await new SignJWT({ 
             id: admin.id,
             label: repairStation.label,
+            role: 'admin',
         })
             .setProtectedHeader({ alg: 'HS256' })
             .setExpirationTime('24h')
