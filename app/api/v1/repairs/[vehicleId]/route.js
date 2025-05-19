@@ -8,7 +8,7 @@ await connectToMongoose();
 
 export const GET = withAuth(async (req, { params }, decoded) => {
   const origin = req.headers.get("origin") || "";
-
+  const { vehicleId } = params;
   const firebaseUid = decoded.user_id;
   const userDoc = await Users.findOne({ firebaseUid }).lean();
   if (!userDoc) {
@@ -16,18 +16,18 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       { error: 'Unauthorized: no such user' },
       { 
         status: 401,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }      
     );
   }
 
-  const { vehicleId } = params;
+  
   if (!vehicleId) {
     return NextResponse.json(
       { error: 'Missing vehicleId' },
       { 
         status: 400,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       } 
     );
   }
@@ -37,7 +37,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
     return NextResponse.json(
       { error: 'Invalid vehicleId' },
       { status: 400,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
@@ -50,7 +50,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
     return NextResponse.json(
       { error: 'Forbidden: not the vehicle owner' },
       { status: 403,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
@@ -64,13 +64,24 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
 export const POST = withAuth(async (req, { params }, decoded) => {
   const origin = req.headers.get("origin") || "";
+  const firebaseUid = decoded.user_id;
+  const userDoc = await Users.findOne({ firebaseUid }).lean();
+  if (!userDoc) {
+    return NextResponse.json(
+      { error: 'Unauthorized: no such user' },
+      { 
+        status: 401,
+        headers: getCorsHeaders(origin),
+      }      
+    );
+  }
 
   const { vehicleId } = params;
   if (!vehicleId) {
     return NextResponse.json(
       { error: 'Missing vehicleId' },
       { status: 400,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
@@ -80,7 +91,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     return NextResponse.json(
       { error: 'Invalid vehicleId' },
       { status: 400,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
@@ -93,7 +104,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     return NextResponse.json(
       { error: 'Forbidden: not the vehicle owner' },
       { status: 403,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
@@ -121,7 +132,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     return NextResponse.json(
       { error: 'Invalid payload' },
       { status: 400,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
@@ -142,13 +153,13 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     });
     return NextResponse.json(newRepair, { 
         status: 201,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       });
   } catch {
     return NextResponse.json(
       { error: 'Error creating repair' },
       { status: 500,
-        headers: getCorsHeaders(req.headers.get("origin") || ""),
+        headers: getCorsHeaders(origin),
       }
     );
   }
