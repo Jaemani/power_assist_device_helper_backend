@@ -11,6 +11,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
         const stations = await RepairStations.find().lean();
 
         const simplified = stations.map((station) => ({
+            id: station._id.toString(),
             code: station.code,
             state: station.state,
             city: station.city,

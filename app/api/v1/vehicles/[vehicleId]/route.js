@@ -50,6 +50,7 @@ export const GET = withAuth( async (req, { params }, decoded) => {
     console.log("Response vehicles/" + vehicleId + " as successful.\n" + vehicleUserId ? vehicleUserId.toString() : "");
     // no owner vehicle OR owner is the same as loginUser
     return NextResponse.json({
+        id: vehicle._id.toString(),
         userId: vehicleUserId ? vehicleUserId.toString() : "",
         vehicleId: vehicle.vehicleId,
         model: vehicle.model,
