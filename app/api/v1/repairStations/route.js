@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
 import { RepairStations } from '@/lib/db/models'; 
-import { withAuth } from '@/lib/auth/withAuth';
+// import { withAuth } from '@/lib/auth/withAuth';
 import { getCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
 
-export const GET = withAuth(async (req, ctx, decoded) => {
+export async function GET(req) {
     try {
         const stations = await RepairStations.find().lean();
 
@@ -16,7 +16,7 @@ export const GET = withAuth(async (req, ctx, decoded) => {
             city: station.city,
             region: station.region,
             address: station.address,
-            label: station.name,
+            label: station.label,
             telephone: station.telephone,
             coordinate: station.coordinate.coordinates, // [lng, lat] 만 전달
         }));
@@ -33,7 +33,7 @@ export const GET = withAuth(async (req, ctx, decoded) => {
             headers: getCorsHeaders(req.headers.get("origin") || ""),
         });
     }
-});
+}
 
 export async function OPTIONS(req) {
   return new NextResponse(null, {
