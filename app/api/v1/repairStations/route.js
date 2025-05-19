@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
 import { RepairStations } from '@/lib/db/models'; 
-// import { withAuth } from '@/lib/auth/withAuth';
+import { withAuth } from '@/lib/auth/withAuth';
 import { getCorsHeaders } from '@/lib/cors';
 
 await connectToMongoose();
 
-export async function GET(req) {
+export const GET = withAuth(async (req, { params }, decoded) => {
     try {
         const stations = await RepairStations.find().lean();
 
@@ -33,7 +33,7 @@ export async function GET(req) {
             headers: getCorsHeaders(req.headers.get("origin") || ""),
         });
     }
-}
+});
 
 export async function OPTIONS(req) {
   return new NextResponse(null, {
