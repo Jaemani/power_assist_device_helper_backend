@@ -24,7 +24,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   await connectToMongoose();
 
   const origin       = req.headers.get('origin') || '';
-  const { vehicleId, repairId } = params;
+  const { vehicleId, repairId } = await params;
   const firebaseUid  = decoded.user_id;
 
   // vehicleId 검사

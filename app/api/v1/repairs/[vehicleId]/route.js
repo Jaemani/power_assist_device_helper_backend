@@ -24,7 +24,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   await connectToMongoose();
 
   const origin     = req.headers.get('origin') || '';
-  const { vehicleId, repairId } = params;
+  const { vehicleId } = await params;
   const firebaseUid = decoded.user_id;
 
   // vehicleId 검사
@@ -34,25 +34,15 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       headers: getCorsHeaders(origin),
     });
   }
-  if (!isValidObjectId(vehicleId)) {
-    return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
-      status: 400,
-      headers: getCorsHeaders(origin),
-    });
-  }
 
-  // repairId 검사
-  if (!repairId) {
-    return new NextResponse(JSON.stringify({ error: 'Missing repairId' }), {
-      status: 400,
-      headers: getCorsHeaders(origin),
-    });
-  }
-  if (!isValidObjectId(repairId)) {
-    return new NextResponse(JSON.stringify({ error: 'Invalid repairId' }), {
-      status: 400,
-      headers: getCorsHeaders(origin),
-    });
+  const vehicle = await Vehicles.findOne({ vehicleId });
+
+  // 해당 vehicle이 존재하지 않은 경우
+  if (!vehicle) {
+      return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
+          status: 404,
+          headers: getCorsHeaders(origin),
+      });
   }
 
   // 사용자 조회
@@ -65,8 +55,8 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   }
 
   // vehicle 소유권 확인
-  const vehicleDoc = await Vehicles.findOne({ _id: vehicleId }).lean();
-  if (!vehicleDoc || String(vehicleDoc.owner) !== String(userDoc._id)) {
+  const vehicleDoc = await Vehicles.findOne({ vehicleId: vehicleId }).lean();
+  if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
     return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
       status: 403,
       headers: getCorsHeaders(origin),
@@ -74,11 +64,8 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   }
 
   // repair 문서 조회
-  const repairDoc = await Repairs.findById(repairId).lean();
-  if (
-    !repairDoc ||
-    String(repairDoc.vehicleId) !== vehicleId
-  ) {
+  const repairDoc = await Repairs.find({vehicleId: vehicle._id.toString() }).lean();
+  if (!repairDoc) {
     return new NextResponse(JSON.stringify({ error: 'Repair not found' }), {
       status: 404,
       headers: getCorsHeaders(origin),

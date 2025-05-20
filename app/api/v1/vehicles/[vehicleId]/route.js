@@ -9,7 +9,7 @@ await connectToMongoose();
 export const GET = withAuth( async (req, { params }, decoded) => {
     const origin = req.headers.get("origin") || "";
     
-    const { vehicleId } = params;
+    const { vehicleId } = await params;
     console.log("GET vehicles/" + vehicleId);
     const firebaseUid = decoded.user_id;
     if (!vehicleId) {
@@ -47,7 +47,7 @@ export const GET = withAuth( async (req, { params }, decoded) => {
             headers: getCorsHeaders(origin),
         });
     }
-    console.log("Response vehicles/" + vehicleId + " as successful.\n" + vehicleUserId ? vehicleUserId.toString() : "");
+    console.log("Response vehicles/" + vehicleId + " as successful.\n" + (vehicleUserId ? vehicleUserId : ""));
     // no owner vehicle OR owner is the same as loginUser
     return NextResponse.json({
         id: vehicle._id.toString(),
