@@ -38,11 +38,11 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   const vehicle = await Vehicles.findOne({ vehicleId });
 
   if (!vehicle) {
-        return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
-            status: 404,
-            headers: getCorsHeaders(origin),
-        });
-    }
+      return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
+          status: 404,
+          headers: getCorsHeaders(origin),
+      });
+  }
 
   // repairId 검사
   if (!repairId) {
@@ -77,6 +77,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   }
 
   // repair 문서 조회
+  console.log("repairId: " + repairId.toString());
   const repairDoc = await Repairs.findOne({ _id: repairId.toString() }).lean();
   if (!repairDoc) {
     return new NextResponse(JSON.stringify({ error: 'Repair not found' }), {
@@ -84,9 +85,9 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       headers: getCorsHeaders(origin),
     });
   }
-
-  const repair = {
-      id: repairDoc._id.toString(),
+  
+  return NextResponse.json({
+    id: repairDoc._id.toString(),
       vehicleId: repairDoc.vehicleId,
       repairedAt: repairDoc.repairedAt,
       billingPrice: repairDoc.billingPrice,
@@ -98,10 +99,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       batteryVolatge: repairDoc.batteryVolatge,
       etcRepairParts: repairDoc.etcRepairParts,
       memo: repairDoc.memo,
-  }
-  
-  return NextResponse.json(
-    {repair}, {
+    }, {
     status: 200,
     headers: getCorsHeaders(origin),
   });
