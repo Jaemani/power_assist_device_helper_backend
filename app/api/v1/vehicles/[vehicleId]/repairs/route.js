@@ -64,15 +64,33 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   }
 
   // repair 문서 조회
-  const repairDoc = await Repairs.find({vehicleId: vehicle._id.toString() }).lean();
-  if (!repairDoc) {
+  const repairs = await Repairs.find({vehicleId: vehicle._id.toString() }).lean();
+  if (!repairs) {
     return new NextResponse(JSON.stringify({ error: 'Repair not found' }), {
       status: 404,
       headers: getCorsHeaders(origin),
     });
   }
 
-  return new NextResponse(JSON.stringify(repairDoc), {
+  
+  const simplified = repairs.map((repair) => ({
+      id: repair._id.toString(),
+      vehicleId: repair.vehicleId,
+      repairedAt: repair.repairedAt,
+      billingPrice: repair.billingPrice,
+      isAccident: repair.isAccident,
+      repairStationCode: repair.repairStationCode,
+      repairStationLabel: repair.repairStationLabel,
+      repairer: repair.repairer,
+      repairCategories: repair.repairCategories,
+      batteryVolatge: repair.batteryVolatge,
+      etcRepairParts: repair.etcRepairParts,
+      memo: repair.memo,
+  }));
+  
+  return new NextResponse.json({
+        repairs: simplified,
+    }, {
     status: 200,
     headers: getCorsHeaders(origin),
   });
