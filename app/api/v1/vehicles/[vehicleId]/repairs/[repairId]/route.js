@@ -85,7 +85,23 @@ export const GET = withAuth(async (req, { params }, decoded) => {
     });
   }
 
-  return new NextResponse(JSON.stringify(repairDoc), {
+  const repair = {
+      id: repairDoc._id.toString(),
+      vehicleId: repairDoc.vehicleId,
+      repairedAt: repairDoc.repairedAt,
+      billingPrice: repairDoc.billingPrice,
+      isAccident: repairDoc.isAccident,
+      repairStationCode: repairDoc.repairStationCode,
+      repairStationLabel: repairDoc.repairStationLabel,
+      repairer: repairDoc.repairer,
+      repairCategories: repairDoc.repairCategories,
+      batteryVolatge: repairDoc.batteryVolatge,
+      etcRepairParts: repairDoc.etcRepairParts,
+      memo: repairDoc.memo,
+  }
+  
+  return NextResponse.json(
+    {repair}, {
     status: 200,
     headers: getCorsHeaders(origin),
   });
