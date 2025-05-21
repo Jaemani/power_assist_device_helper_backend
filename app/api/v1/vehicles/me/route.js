@@ -7,34 +7,42 @@ import { getCorsHeaders } from '@/lib/cors';
 await connectToMongoose();
 
 export const GET = withAuth( async (req, { params }, decoded) => {
-    const origin = req.headers.get("origin") || "";
-    
+    try {
+        const origin = req.headers.get("origin") || "";
+        
 
-    const firebaseUid = decoded.user_id;
-    
-    const user = await Users.findOne({ firebaseUid });
-    if (!user) {
-        return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
-            status: 401,
+        const firebaseUid = decoded.user_id;
+        
+        const user = await Users.findOne({ firebaseUid });
+        if (!user) {
+            return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
+                status: 401,
+                headers: getCorsHeaders(origin),
+            });
+        }
+
+        const vehicle = await Vehicles.findOne({ userId: user._id }).lean();
+        if (!vehicle) {
+            return new NextResponse(JSON.stringify({ error: 'No vehicle found for this user' }), {
+                status: 404,
+                headers: getCorsHeaders(origin),
+            });
+        }
+
+        // no owner vehicle OR owner is the same as loginUser
+        return NextResponse.json({
+            vehicleId: vehicle.vehicleId
+        }, {
+            status: 200,
+            headers: getCorsHeaders(origin),
+        });
+    } catch (error) {
+        console.error("Error in GET /api/v1/vehicles/me:", error);
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+            status: 500,
             headers: getCorsHeaders(origin),
         });
     }
-
-    const vehicle = await Vehicles.findOne({ userId: user._id }).lean();
-    if (!vehicle) {
-        return new NextResponse(JSON.stringify({ error: 'No vehicle found for this user' }), {
-            status: 404,
-            headers: getCorsHeaders(origin),
-        });
-    }
-
-    // no owner vehicle OR owner is the same as loginUser
-    return NextResponse.json({
-        vehicleId: vehicle.vehicleId
-    }, {
-        status: 200,
-        headers: getCorsHeaders(origin),
-    });
 });
 
 export async function OPTIONS(req) {
