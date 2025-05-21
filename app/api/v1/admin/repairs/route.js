@@ -30,10 +30,10 @@ export async function GET(req) {
 
     // Only add filters if they are explicitly provided
     if (startDate) {
-      query.repairedDate = { $gte: new Date(startDate) };
+      query.repairedAt = { $gte: new Date(startDate) };
     }
     if (endDate) {
-      query.repairedDate = { ...query.repairedDate, $lte: new Date(endDate) };
+      query.repairedAt = { ...query.repairedAt, $lte: new Date(endDate) };
     }
     if (repairStationCode) {
       query.repairStationCode = repairStationCode;
@@ -78,7 +78,7 @@ export async function GET(req) {
     const skip = (page - 1) * limit;
     const [repairs, total] = await Promise.all([
       Repairs.find(query)
-        .sort({ repairedDate: -1 }) // Always sort by repair date, most recent first
+        .sort({ repairedAt: -1 }) // Always sort by repair date, most recent first
         .skip(skip)
         .limit(limit)
         .populate({

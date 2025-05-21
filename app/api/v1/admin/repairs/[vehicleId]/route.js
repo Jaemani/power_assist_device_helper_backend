@@ -41,7 +41,7 @@ export async function GET(req, { params }) {
     const skip = (page - 1) * limit;
     const [repairs, total] = await Promise.all([
       Repairs.find(query)
-        .sort({ repairedDate: -1 }) // Always sort by repair date, most recent first
+        .sort({ repairedAt: -1 }) // Always sort by repair date, most recent first
         .skip(skip)
         .limit(limit)
         .lean(),

@@ -13,7 +13,7 @@ async function testGet() {
 
 async function testPost() {
   const payload = {
-    repairedDate: new Date().toISOString(),
+    repairedAt: new Date().toISOString(),
     billingPrice: 90000,
     isAccident: true,
     repairCategories: ['배터리', '기타'],

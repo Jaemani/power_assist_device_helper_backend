@@ -192,7 +192,7 @@
 - **설명**: 차량의 모든 수리 내역을 가져옵니다. 가장 최근 수리가 먼저 나옵니다.
 - **성공 예시**:
 ```json
-[ { "repairer": "홍수리기사", "repairStationCode": "ST01", "repairStationLabel": "강남수리센터", "repairedDate": "2024-12-12T00:00:00.000Z", "billingPrice": 15000, "isAccident": false, "repairCategories": ["타이어", "기타"], "batteryVoltage": 36.5, "etcRepairParts": "배터리 교체", "memo": "비상 수리" } ]
+[ { "repairer": "홍수리기사", "repairStationCode": "ST01", "repairStationLabel": "강남수리센터", "repairedAt": "2024-12-12T00:00:00.000Z", "billingPrice": 15000, "isAccident": false, "repairCategories": ["타이어", "기타"], "batteryVoltage": 36.5, "etcRepairParts": "배터리 교체", "memo": "비상 수리" } ]
 ```
 - **실패 상황**:
   - 차량 ID가 잘못됨
@@ -208,7 +208,7 @@
 - **설명**: 차량의 새로운 수리 정보를 등록합니다.
 - **필수 정보**:
   - 수리자 이름 (`repairer`) 
-  - 수리일자 (`repairedDate`)
+  - 수리일자 (`repairedAt`)
   - 수리비 (`billingPrice`)
   - 사고 여부 (`isAccident`: true/false)
   - 수리 항목 목록 (`repairCategories`: 예: ["타이어", "기타"])
@@ -308,7 +308,7 @@ MongoDB (Mongoose) 기반 데이터 모델 설명. 각 모델은 `/lib/db/models
 | Field              | Type                      | Required | Description                             |
 |--------------------|---------------------------|----------|-----------------------------------------|
 | vehicleId          | ObjectId (ref: vehicles)  | ✅       | 수리 대상 차량 ID                       |
-| repairedDate       | Date                      | ✅       | 수리 날짜                               |
+| repairedAt       | Date                      | ✅       | 수리 날짜                               |
 | billingPrice       | Number                    | ✅       | 수리 비용                               |
 | isAccident         | Boolean                   | ✅       | 사고 수리 여부                          |
 | repairStationCode  | String                    | ✅       | 수리센터 코드                           |
