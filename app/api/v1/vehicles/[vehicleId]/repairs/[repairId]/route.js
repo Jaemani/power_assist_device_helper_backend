@@ -77,7 +77,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   }
 
   // repair 문서 조회
-  const repairDoc = await Repairs.findById(repairId).lean();
+  const repairDoc = await Repairs.findOne({ _id: repairId.toString() }).lean();
   if (!repairDoc) {
     return new NextResponse(JSON.stringify({ error: 'Repair not found' }), {
       status: 404,
