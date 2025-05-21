@@ -78,10 +78,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
   // repair 문서 조회
   const repairDoc = await Repairs.findById(repairId).lean();
-  if (
-    !repairDoc ||
-    String(repairDoc.vehicleId) !== vehicleId
-  ) {
+  if (!repairDoc) {
     return new NextResponse(JSON.stringify({ error: 'Repair not found' }), {
       status: 404,
       headers: getCorsHeaders(origin),
