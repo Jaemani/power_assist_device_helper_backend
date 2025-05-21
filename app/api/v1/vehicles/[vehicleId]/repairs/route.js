@@ -88,7 +88,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       memo: repair.memo,
   }));
   
-  return new NextResponse.json({
+  return NextResponse.json({
         repairs: simplified,
     }, {
     status: 200,
