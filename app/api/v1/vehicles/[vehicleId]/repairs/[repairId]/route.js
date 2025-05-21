@@ -34,12 +34,15 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       headers: getCorsHeaders(origin),
     });
   }
-  if (!isValidObjectId(vehicleId)) {
-    return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
-      status: 400,
-      headers: getCorsHeaders(origin),
-    });
-  }
+
+  const vehicle = await Vehicles.findOne({ vehicleId });
+
+  if (!vehicle) {
+        return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
+            status: 404,
+            headers: getCorsHeaders(origin),
+        });
+    }
 
   // repairId 검사
   if (!repairId) {
@@ -65,7 +68,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   }
 
   // vehicle 소유권 확인
-  const vehicleDoc = await Vehicles.findOne({ _id: vehicleId }).lean();
+  const vehicleDoc = await Vehicles.findOne({ _id: vehicle._id.toString() }).lean();
   if (!vehicleDoc || String(vehicleDoc.owner) !== String(userDoc._id)) {
     return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
       status: 403,
