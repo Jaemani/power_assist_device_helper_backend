@@ -14,12 +14,19 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     console.log("POST users/");
     try {
         const body = await req.json();
-        const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = body;
+        const {name, vehicleId, model, purchasedAt, registeredAt, recipientType,smsConsent} = body;
         const firebaseUid = decoded.user_id;
         const phoneNumber = decoded.phone_number;
         const role = 'user'
 
-        try {
+        try {   
+            if (typeof smsConsent !== 'boolean') {
+              return new NextResponse(
+                JSON.stringify({ error: 'Missing or invalid smsConsent' }),
+                { status: 400, headers: getCorsHeaders(origin) }
+              );
+            }
+
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
                 return new NextResponse(JSON.stringify({ error: 'Invalid ID token' }), {
                     status: 401,
@@ -78,6 +85,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 phoneNumber, // from decoded token
                 role, // default role = 'user'
                 recipientType,
+                smsConsent,
                 guardianIds: [], // array of ObjectId, empty at first. type by manager manually later
             });
             
@@ -104,6 +112,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 phoneNumber: newUser.phoneNumber,
                 role: newUser.role,
                 recipientType: newUser.recipientType,
+                smsConsent: newUser.smsConsent,
                 vehicleId: vehicle.vehicleId,
             }, { 
                 status: 201,
