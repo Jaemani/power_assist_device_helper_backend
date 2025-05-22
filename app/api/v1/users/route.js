@@ -20,12 +20,6 @@ export const POST = withAuth(async (req, { params }, decoded) => {
         const role = 'user'
 
         try {   
-            if (typeof smsConsent !== 'boolean') {
-              return new NextResponse(
-                JSON.stringify({ error: 'Missing or invalid smsConsent' }),
-                { status: 400, headers: getCorsHeaders(origin) }
-              );
-            }
 
             if (firebaseUid === undefined || firebaseUid === "" || phoneNumber === undefined || phoneNumber === "") {
                 return new NextResponse(JSON.stringify({ error: 'Invalid ID token' }), {
@@ -76,6 +70,13 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                     headers: getCorsHeaders(origin),
                     
                 });
+            }
+            
+            if (typeof smsConsent !== 'boolean') {
+              return new NextResponse(
+                JSON.stringify({ error: 'Missing or invalid smsConsent' }),
+                { status: 400, headers: getCorsHeaders(origin) }
+              );
             }
 
             // new user
