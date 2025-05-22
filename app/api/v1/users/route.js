@@ -14,7 +14,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     console.log("POST users/");
     try {
         const body = await req.json();
-        const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = body; // smsConsent 뺌
+        const {name, supportedDistrict, vehicleId, model, purchasedAt, registeredAt, recipientType} = body; // smsConsent 뺌
         const firebaseUid = decoded.user_id;
         const phoneNumber = decoded.phone_number;
         const role = 'user'
@@ -89,6 +89,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 role, // default role = 'user'
                 recipientType,
                 smsConsent,
+                supportedDistrict,
                 guardianIds: [], // array of ObjectId, empty at first. type by manager manually later
             });
             
@@ -116,6 +117,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 role: newUser.role,
                 recipientType: newUser.recipientType,
                 smsConsent: newUser.smsConsent,
+                supportedDistrict: newUser.supportedDistrict,
                 vehicleId: vehicle.vehicleId,
             }, { 
                 status: 201,
