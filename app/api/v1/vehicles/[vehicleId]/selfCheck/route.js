@@ -71,7 +71,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       antislipWorn: selfCheck.antislipWorn,
       frameNoise: selfCheck.frameNoise,
       frameCrack: selfCheck.frameCrack,
-      checkedAt: selfCheck.checkedAt,
+      createdAt: selfCheck.createdAt,
     }));
 
     return NextResponse.json({ 
