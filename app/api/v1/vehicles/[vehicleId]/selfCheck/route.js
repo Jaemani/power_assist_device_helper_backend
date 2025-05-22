@@ -39,8 +39,8 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
     if (String(vehicle.userId) !== String(user._id)) {
       return NextResponse.json(
-        { error: 'Forbidden: not the vehicle owner' },
-        { status: 403, headers: getCorsHeaders(origin) }
+        { error: 'Not the vehicle owner' },
+        { status: 404, headers: getCorsHeaders(origin) }
       );
     }
 

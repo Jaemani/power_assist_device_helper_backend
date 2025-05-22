@@ -38,7 +38,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
   if (!vehicle) {
       return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
-          status: 404,
+          status: 400,
           headers: getCorsHeaders(origin),
       });
   }
@@ -60,8 +60,8 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   // 사용자 조회
   const userDoc = await Users.findOne({ firebaseUid }).lean();
   if (!userDoc) {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
-      status: 401,
+    return new NextResponse(JSON.stringify({ error: 'User not found' }), {
+      status: 404,
       headers: getCorsHeaders(origin),
     });
   }
@@ -69,8 +69,8 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   // vehicle 소유권 확인
   const vehicleDoc = await Vehicles.findOne({ _id: vehicle._id.toString() }).lean();
   if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
-    return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
-      status: 403,
+    return new NextResponse(JSON.stringify({ error: 'No self check records found' }), {
+      status: 404,
       headers: getCorsHeaders(origin),
     });
   }
