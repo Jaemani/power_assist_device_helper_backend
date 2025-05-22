@@ -44,7 +44,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       );
     }
 
-    const selfChecks = await SelfChecks.find({ vehicleId: vehicle._id }).lean();
+    const selfChecks = await SelfChecks.find({ vehicleId: vehicle._id }).sort({ _id: -1 }).lean();
     if (!selfChecks) {
       return NextResponse.json(
         { error: 'No self check records found' },
