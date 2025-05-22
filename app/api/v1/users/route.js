@@ -14,10 +14,12 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     console.log("POST users/");
     try {
         const body = await req.json();
-        const {name, vehicleId, model, purchasedAt, registeredAt, recipientType,smsConsent} = body;
+        const {name, vehicleId, model, purchasedAt, registeredAt, recipientType} = body; // smsConsent 뺌
         const firebaseUid = decoded.user_id;
         const phoneNumber = decoded.phone_number;
         const role = 'user'
+        
+        const smsConsent = false; // 임시
 
         try {   
 
@@ -72,12 +74,12 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                 });
             }
             
-            if (typeof smsConsent !== 'boolean') {
-              return new NextResponse(
-                JSON.stringify({ error: 'Missing or invalid smsConsent' }),
-                { status: 400, headers: getCorsHeaders(origin) }
-              );
-            }
+            // if (typeof smsConsent !== 'boolean') {
+            //   return new NextResponse(
+            //     JSON.stringify({ error: 'Missing or invalid smsConsent' }),
+            //     { status: 400, headers: getCorsHeaders(origin) }
+            //   );
+            // }
 
             // new user
             const newUser = new Users({
