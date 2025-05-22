@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import { Users, Vehicles } from '@/lib/db/models';
-import { SelfChecks } from '@/lib/db/models';
+import { Users, Vehicles, SelfChecks } from '@/lib/db/models';
 import { withAuth } from '@/lib/auth/withAuth';
 import { sendSms } from '@/lib/sms';
 import { getCorsHeaders } from '@/lib/cors';
@@ -17,10 +16,83 @@ export async function OPTIONS(req) {
   });
 }
 
+export const GET = withAuth(async (req, { params }, decoded) => {
+  try {
+
+    const origin = req.headers.get('origin') || '';
+    const { vehicleId } = await params;
+    // — 로그인 유저 조회
+    const user = await Users.findOne({ firebaseUid: decoded.user_id });
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404, headers: getCorsHeaders(origin) }
+      );
+    }
+    const vehicle = await Vehicles.findOne({ vehicleId });
+    if (!vehicle) {
+      return NextResponse.json(
+        { error: 'Invalid vehicleId' },
+        { status: 404, headers: getCorsHeaders(origin) }
+      );
+    }
+
+    if (String(vehicle.userId) !== String(user._id)) {
+      return NextResponse.json(
+        { error: 'Forbidden: not the vehicle owner' },
+        { status: 403, headers: getCorsHeaders(origin) }
+      );
+    }
+
+    const selfChecks = await SelfChecks.find({ vehicleId: vehicle._id }).lean();
+    if (!selfChecks) {
+      return NextResponse.json(
+        { error: 'No self check records found' },
+        { status: 404, headers: getCorsHeaders(origin) }
+      );
+    }
+
+    const simplified = selfChecks.map((selfCheck) => ({
+      id: selfCheck._id.toString(),
+      vehicleId: selfCheck.vehicleId.toString(),
+      motorNoise: selfCheck.motorNoise,
+      abnormalSpeed: selfCheck.abnormalSpeed,
+      batteryBlinking: selfCheck.batteryBlinking,
+      chargingNotStart: selfCheck.chargingNotStart,
+      breakDelay: selfCheck.breakDelay,
+      breakPadIssue: selfCheck.breakPadIssue,
+      tubePunctureFrequent: selfCheck.tubePunctureFrequent,
+      tireWearFrequent: selfCheck.tireWearFrequent,
+      batteryDischargeFast: selfCheck.batteryDischargeFast,
+      incompleteCharging: selfCheck.incompleteCharging,
+      seatUnstable: selfCheck.seatUnstable,
+      seatCoverIssue: selfCheck.seatCoverIssue,
+      footRestLoose: selfCheck.footRestLoose,
+      antislipWorn: selfCheck.antislipWorn,
+      frameNoise: selfCheck.frameNoise,
+      frameCrack: selfCheck.frameCrack,
+      checkedAt: selfCheck.checkedAt,
+    }));
+
+    return NextResponse.json({ 
+      selfChecks: simplified },
+      { status: 200, 
+        headers: getCorsHeaders(origin) }
+    );
+  } catch (error) {
+    console.error('Error in GET /selfCheck:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500, headers: getCorsHeaders(req.headers.get('origin') || '') }
+    );
+  }
+});
+
 export const POST = withAuth(async (req, { params }, decoded) => {
   const origin = req.headers.get('origin') || '';
   const { vehicleId } = await params;
-  const { motorNoise, 
+  const { 
+    motorNoise, 
     abnormalSpeed, 
     batteryBlinking, 
     chargingNotStart, 
