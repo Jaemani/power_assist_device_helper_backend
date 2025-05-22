@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
     try {
         // Find user by ID
         const user = await Users.findById(params.id)
-            .select('name phoneNumber role recipientType smsConsent guardianIds createdAt updatedAt')
+            .select('name phoneNumber role recipientType supportedDistrict smsConsent guardianIds createdAt updatedAt')
             .lean();
 
         if (!user) {
@@ -121,7 +121,7 @@ export async function PATCH(request, { params }) {
         const data = await request.json();
         
         // Validate input data
-        const allowedFields = ['name', 'phoneNumber', 'recipientType', 'role', 'smsConsent', 'guardians'];
+        const allowedFields = ['name', 'phoneNumber', 'recipientType', 'supportedDistrict', 'role', 'smsConsent', 'guardians'];
         const updateData = {};
         
         Object.keys(data).forEach(key => {
@@ -174,8 +174,9 @@ export async function PATCH(request, { params }) {
                         const guardianUser = await Users.create({
                             name,
                             role: 'guardian',
-                            recipientType: 'general', // Use a valid enum value instead of empty string
-                            phoneNumber: '00000000000', // Provide a dummy phone number to pass validation
+                            recipientType: '', // Updated to use Korean value
+                            supportedDistrict: '', // Default value for guardians
+                            phoneNumber: '', // Provide a dummy phone number to pass validation
                             smsConsent: false,
                             firebaseUid: tempFirebaseUid,
                             guardianIds: [] // Empty array for guardian users
@@ -213,7 +214,7 @@ export async function PATCH(request, { params }) {
             id,
             updateFields,
             { new: true }
-        ).select('name phoneNumber role recipientType smsConsent guardianIds createdAt updatedAt');
+        ).select('name phoneNumber role recipientType supportedDistrict smsConsent guardianIds createdAt updatedAt');
 
         // Add guardian information to response
         let guardians = [];
