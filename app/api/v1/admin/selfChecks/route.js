@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import { Users,Repairs, Vehicles } from '@/lib/db/models';
+import { SelfChecks, Vehicles, Users } from '@/lib/db/models';
 import { validateAdminToken } from '@/lib/auth/adminAuth';
 import { getCorsHeaders } from '@/lib/cors';
 import { withAuth } from '@/lib/auth/withAuth';
@@ -23,9 +23,9 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const limit = parseInt(searchParams.get('limit') || '10');
             const startDate = searchParams.get('startDate');
             const endDate = searchParams.get('endDate');
-            const repairStationCode = searchParams.get('repairStationCode');
-            const isAccident = searchParams.get('isAccident');
             const vehicleId = searchParams.get('vehicleId');
+            const hasIssues = searchParams.get('hasIssues');
+            const search = searchParams.get('search');
 
             // Calculate skip for pagination
             const skip = (page - 1) * limit;
@@ -34,40 +34,55 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const query = {};
             
             if (startDate) {
-                query.repairedAt = { $gte: new Date(startDate) };
+                query.createdAt = { $gte: new Date(startDate) };
             }
             if (endDate) {
-                query.repairedAt = { 
-                    ...query.repairedAt,
+                query.createdAt = { 
+                    ...query.createdAt,
                     $lte: new Date(endDate + 'T23:59:59')
                 };
-            }
-            if (repairStationCode) {
-                query.repairStationCode = repairStationCode;
-            }
-            if (isAccident !== null && isAccident !== undefined) {
-                query.isAccident = isAccident === 'true';
             }
             if (vehicleId) {
                 query.vehicleId = vehicleId;
             }
+            if (hasIssues === 'true') {
+                query.$or = [
+                    { motorNoise: true },
+                    { abnormalSpeed: true },
+                    { batteryBlinking: true },
+                    { chargingNotStart: true },
+                    { breakDelay: true },
+                    { breakPadIssue: true },
+                    { tubePunctureFrequent: true },
+                    { tireWearFrequent: true },
+                    { batteryDischargeFast: true },
+                    { incompleteCharging: true },
+                    { seatUnstable: true },
+                    { seatCoverIssue: true },
+                    { footRestLoose: true },
+                    { antislipWorn: true },
+                    { frameNoise: true },
+                    { frameCrack: true }
+                ];
+            }
 
             // Execute query with pagination
-            const [repairs, total] = await Promise.all([
-                Repairs.find(query)
-                    .sort({ repairedAt: -1 })
+            const [selfChecks, total] = await Promise.all([
+                SelfChecks.find(query)
+                    .sort({ createdAt: -1 })
                     .skip(skip)
                     .limit(limit)
                     .lean(),
-                Repairs.countDocuments(query)
+                SelfChecks.countDocuments(query)
             ]);
 
-            // Get vehicle information for each repair
-            const repairsWithVehicles = await Promise.all(repairs.map(async (repair) => {
-                const vehicle = await Vehicles.findById(repair.vehicleId).lean();
+            // Get vehicle and user information for each self-check
+            const selfChecksWithDetails = await Promise.all(selfChecks.map(async (check) => {
+                const vehicle = await Vehicles.findById(check.vehicleId).lean();
                 const user = vehicle?.userId ? await Users.findById(vehicle.userId).lean() : null;
+                
                 return {
-                    ...repair,
+                    ...check,
                     vehicle: vehicle ? {
                         _id: vehicle._id.toString(),
                         vehicleId: vehicle.vehicleId,
@@ -81,15 +96,26 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                 };
             }));
 
+            // Apply search filter if provided
+            let filteredChecks = selfChecksWithDetails;
+            if (search) {
+                const searchLower = search.toLowerCase();
+                filteredChecks = selfChecksWithDetails.filter(check => 
+                    (check.vehicle?.vehicleId?.toLowerCase().includes(searchLower)) ||
+                    (check.user?.name?.toLowerCase().includes(searchLower)) ||
+                    (check.user?.phoneNumber?.includes(search))
+                );
+            }
+
             return NextResponse.json({
                 success: true,
-                repairs: repairsWithVehicles,
+                selfChecks: filteredChecks,
                 currentPage: page,
                 totalPages: Math.ceil(total / limit),
                 total
             }, { headers: getCorsHeaders(origin) });
         } catch (error) {
-            console.error('Error in admin repairs API:', error);
+            console.error('Error in admin self-checks API:', error);
             return NextResponse.json(
                 { success: false, message: 'Internal server error' },
                 {
