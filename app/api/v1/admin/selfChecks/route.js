@@ -11,10 +11,6 @@ export const GET = withAuth(async (req, { params }, decoded) => {
     const origin = req.headers.get("origin") || "";
     if (decoded.role === 'admin') {
         // Verify admin authentication
-        const authResponse = await validateAdminToken(req);
-        if (authResponse instanceof NextResponse) {
-            return authResponse;
-        }
 
         try {
             // Get query parameters
@@ -66,46 +62,146 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                 ];
             }
 
-            // Execute query with pagination
-            const [selfChecks, total] = await Promise.all([
-                SelfChecks.find(query)
-                    .sort({ createdAt: -1 })
-                    .skip(skip)
-                    .limit(limit)
-                    .lean(),
-                SelfChecks.countDocuments(query)
-            ]);
+            // Build aggregation pipeline
+            const pipeline = [
+                { $match: query },
+                {
+                    $lookup: {
+                        from: "vehicles",
+                        localField: "vehicleId",
+                        foreignField: "_id",
+                        as: "vehicle"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$vehicle",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "vehicle.userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$user",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        "vehicle._id": { $toString: "$vehicle._id" },
+                        "user._id": { $toString: "$user._id" }
+                    }
+                }
+            ];
 
-            // Get vehicle and user information for each self-check
-            const selfChecksWithDetails = await Promise.all(selfChecks.map(async (check) => {
-                const vehicle = await Vehicles.findById(check.vehicleId).lean();
-                const user = vehicle?.userId ? await Users.findById(vehicle.userId).lean() : null;
-                
-                return {
-                    ...check,
-                    vehicle: vehicle ? {
-                        _id: vehicle._id.toString(),
-                        vehicleId: vehicle.vehicleId,
-                        model: vehicle.model
-                    } : null,
-                    user: user ? {
-                        _id: user._id.toString(),
-                        name: user.name,
-                        phoneNumber: user.phoneNumber
-                    } : null
-                };
-            }));
-
-            // Apply search filter if provided
-            let filteredChecks = selfChecksWithDetails;
+            // Add search filter to pipeline if provided
             if (search) {
                 const searchLower = search.toLowerCase();
-                filteredChecks = selfChecksWithDetails.filter(check => 
-                    (check.vehicle?.vehicleId?.toLowerCase().includes(searchLower)) ||
-                    (check.user?.name?.toLowerCase().includes(searchLower)) ||
-                    (check.user?.phoneNumber?.includes(search))
-                );
+                pipeline.push({
+                    $match: {
+                        $or: [
+                            { "vehicle.vehicleId": { $regex: searchLower, $options: "i" } },
+                            { "user.name": { $regex: searchLower, $options: "i" } },
+                            { "user.phoneNumber": { $regex: search, $options: "i" } }
+                        ]
+                    }
+                });
             }
+
+            // Add projection and sorting
+            pipeline.push(
+                {
+                    $project: {
+                        _id: 1,
+                        vehicleId: 1,
+                        createdAt: 1,
+                        motorNoise: 1,
+                        abnormalSpeed: 1,
+                        batteryBlinking: 1,
+                        chargingNotStart: 1,
+                        breakDelay: 1,
+                        breakPadIssue: 1,
+                        tubePunctureFrequent: 1,
+                        tireWearFrequent: 1,
+                        batteryDischargeFast: 1,
+                        incompleteCharging: 1,
+                        seatUnstable: 1,
+                        seatCoverIssue: 1,
+                        footRestLoose: 1,
+                        antislipWorn: 1,
+                        frameNoise: 1,
+                        frameCrack: 1,
+                        updatedAt: 1,
+                        vehicle: {
+                            _id: "$vehicle._id",
+                            vehicleId: "$vehicle.vehicleId",
+                            model: "$vehicle.model"
+                        },
+                        user: {
+                            _id: "$user._id",
+                            name: "$user.name",
+                            phoneNumber: "$user.phoneNumber"
+                        }
+                    }
+                },
+                { $sort: { createdAt: -1 } }
+            );
+
+            // Execute aggregation with pagination
+            const [selfChecksResult, totalResult] = await Promise.all([
+                SelfChecks.aggregate([
+                    ...pipeline,
+                    { $skip: skip },
+                    { $limit: limit }
+                ]),
+                SelfChecks.aggregate([
+                    { $match: query },
+                    ...(search ? [{
+                        $lookup: {
+                            from: "vehicles",
+                            localField: "vehicleId",
+                            foreignField: "_id",
+                            as: "vehicle"
+                        }
+                    }, {
+                        $unwind: {
+                            path: "$vehicle",
+                            preserveNullAndEmptyArrays: true
+                        }
+                    }, {
+                        $lookup: {
+                            from: "users",
+                            localField: "vehicle.userId",
+                            foreignField: "_id",
+                            as: "user"
+                        }
+                    }, {
+                        $unwind: {
+                            path: "$user",
+                            preserveNullAndEmptyArrays: true
+                        }
+                    }, {
+                        $match: {
+                            $or: [
+                                { "vehicle.vehicleId": { $regex: search.toLowerCase(), $options: "i" } },
+                                { "user.name": { $regex: search.toLowerCase(), $options: "i" } },
+                                { "user.phoneNumber": { $regex: search, $options: "i" } }
+                            ]
+                        }
+                    }] : []),
+                    { $count: "total" }
+                ])
+            ]);
+
+            const filteredChecks = selfChecksResult;
+            const total = totalResult[0]?.total || 0;
 
             return NextResponse.json({
                 success: true,

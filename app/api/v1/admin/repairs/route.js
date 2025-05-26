@@ -52,34 +52,89 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                 query.vehicleId = vehicleId;
             }
 
-            // Execute query with pagination
-            const [repairs, total] = await Promise.all([
-                Repairs.find(query)
-                    .sort({ repairedAt: -1 })
-                    .skip(skip)
-                    .limit(limit)
-                    .lean(),
-                Repairs.countDocuments(query)
+            // Build aggregation pipeline
+            const pipeline = [
+                { $match: query },
+                {
+                    $lookup: {
+                        from: "vehicles",
+                        localField: "vehicleId",
+                        foreignField: "_id",
+                        as: "vehicle"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$vehicle",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "vehicle.userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$user",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $addFields: {
+                        "vehicle._id": { $toString: "$vehicle._id" },
+                        "user._id": { $toString: "$user._id" }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        vehicleId: 1,
+                        repairedAt: 1,
+                        billingPrice: 1,
+                        isAccident: 1,
+                        repairStationLabel: 1,
+                        repairStationCode: 1,
+                        troubleInfo: 1,
+                        repairDetail: 1,
+                        repairType: 1,
+                        billedAmount: 1,
+                        requestedAmount: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        vehicle: {
+                            _id: "$vehicle._id",
+                            vehicleId: "$vehicle.vehicleId",
+                            model: "$vehicle.model"
+                        },
+                        user: {
+                            _id: "$user._id",
+                            name: "$user.name",
+                            phoneNumber: "$user.phoneNumber"
+                        }
+                    }
+                },
+                { $sort: { repairedAt: -1 } }
+            ];
+
+            // Execute aggregation with pagination
+            const [repairsResult, totalResult] = await Promise.all([
+                Repairs.aggregate([
+                    ...pipeline,
+                    { $skip: skip },
+                    { $limit: limit }
+                ]),
+                Repairs.aggregate([
+                    { $match: query },
+                    { $count: "total" }
+                ])
             ]);
 
-            // Get vehicle information for each repair
-            const repairsWithVehicles = await Promise.all(repairs.map(async (repair) => {
-                const vehicle = await Vehicles.findById(repair.vehicleId).lean();
-                const user = vehicle?.userId ? await Users.findById(vehicle.userId).lean() : null;
-                return {
-                    ...repair,
-                    vehicle: vehicle ? {
-                        _id: vehicle._id.toString(),
-                        vehicleId: vehicle.vehicleId,
-                        model: vehicle.model
-                    } : null,
-                    user: user ? {
-                        _id: user._id.toString(),
-                        name: user.name,
-                        phoneNumber: user.phoneNumber
-                    } : null
-                };
-            }));
+            const repairsWithVehicles = repairsResult;
+            const total = totalResult[0]?.total || 0;
 
             return NextResponse.json({
                 success: true,

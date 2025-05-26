@@ -158,12 +158,6 @@ export const GET = withAuth(async (req, { params }, decoded) => {
     const origin = req.headers.get("origin") || "";
     if (decoded.role === 'admin') {
 
-        // Verify admin authentication
-        const authResponse = await validateAdminToken(req);
-        if (authResponse instanceof NextResponse) {
-            return authResponse;
-        }
-
         try {
             // Get query parameters
             const { searchParams } = new URL(req.url);
