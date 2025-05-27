@@ -25,12 +25,14 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
   const origin = req.headers.get('origin') || '';
   const { vehicleId } = await params;
+  let userDoc = null;
   
+  console.log(decoded)
   if (decoded.role !== 'admin'){ // admin 우회
     const firebaseUid = decoded.user_id;
 
     // 사용자 조회
-    const userDoc = await Users.findOne({ firebaseUid }).lean();
+    userDoc = await Users.findOne({ firebaseUid }).lean();
     if (!userDoc) {
       return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
         status: 401,
