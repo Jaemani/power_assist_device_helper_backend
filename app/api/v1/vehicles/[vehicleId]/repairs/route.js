@@ -23,9 +23,21 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   // DB 연결은 handler 안에서만
   await connectToMongoose();
 
-  const origin     = req.headers.get('origin') || '';
+  const origin = req.headers.get('origin') || '';
   const { vehicleId } = await params;
-  const firebaseUid = decoded.user_id;
+  
+  if (decoded.role !== 'admin'){ // admin 우회
+    const firebaseUid = decoded.user_id;
+
+    // 사용자 조회
+    const userDoc = await Users.findOne({ firebaseUid }).lean();
+    if (!userDoc) {
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
+        status: 401,
+        headers: getCorsHeaders(origin),
+      });
+    }
+  }
 
   // vehicleId 검사
   if (!vehicleId) {
@@ -45,22 +57,15 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       });
   }
 
-  // 사용자 조회
-  const userDoc = await Users.findOne({ firebaseUid }).lean();
-  if (!userDoc) {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
-      status: 401,
-      headers: getCorsHeaders(origin),
-    });
-  }
-
-  // vehicle 소유권 확인
-  const vehicleDoc = await Vehicles.findOne({ vehicleId: vehicleId }).lean();
-  if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
-    return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
-      status: 403,
-      headers: getCorsHeaders(origin),
-    });
+  if (decoded.role !== 'admin'){ // admin 우회
+    // vehicle 소유권 확인
+    const vehicleDoc = await Vehicles.findOne({ vehicleId: vehicleId }).lean();
+    if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
+      return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
+        status: 403,
+        headers: getCorsHeaders(origin),
+      });
+    }
   }
 
   // repair 문서 조회
