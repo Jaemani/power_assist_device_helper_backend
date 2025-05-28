@@ -103,6 +103,104 @@ export const GET = withAuth(async (req, { params }, decoded) => {
   });
 });
 
+//post
+export const POST = withAuth(async (req, { params }, decoded) => {
+  const origin = req.headers.get('origin') || '';
+  const { vehicleId } = params;
+
+  if (!vehicleId || !isValidObjectId(vehicleId)) {
+    return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
+      status: 400,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
+  const firebaseUid = decoded.user_id;
+  const loginUser = await Users.findOne({ firebaseUid });
+
+  if (!loginUser) {
+    return new NextResponse(JSON.stringify({ error: 'Unauthorized: no such user' }), {
+      status: 401,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
+  const vehicle = await Vehicles.findOne({ vehicleId });
+  if (!vehicle) {
+    return new NextResponse(JSON.stringify({ error: 'Vehicle not found' }), {
+      status: 404,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
+  if (String(vehicle.userId) !== String(loginUser._id)) {
+    return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
+      status: 403,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new NextResponse(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
+  const requiredFields = [
+    'repairedAt',
+    'billingPrice',
+    'isAccident',
+    'repairCategories',
+    'batteryVoltage',
+    'repairer',
+    'repairStationCode',
+    'repairStationLabel',
+  ];
+
+  for (const field of requiredFields) {
+    if (!(field in body)) {
+      return new NextResponse(JSON.stringify({ error: `Missing field: ${field}` }), {
+        status: 400,
+        headers: getCorsHeaders(origin),
+      });
+    }
+  }
+
+  try {
+    const newRepair = new Repairs({
+      vehicleId: vehicle._id,
+      repairedAt: new Date(body.repairedAt),
+      billingPrice: body.billingPrice,
+      isAccident: body.isAccident,
+      repairCategories: body.repairCategories,
+      batteryVoltage: body.batteryVoltage,
+      repairer: body.repairer || true, 
+      repairStationCode: body.repairStationCode,
+      repairStationLabel: body.repairStationLabel,
+      etcRepairParts: body.etcRepairParts || '',
+      memo: body.memo || '',
+    });
+
+    await newRepair.save();
+
+    return new NextResponse(null, {
+      status: 201,
+      headers: getCorsHeaders(origin),
+    });
+  } catch (error) {
+    console.error(error);
+    return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500,
+      headers: getCorsHeaders(origin),
+    });
+  }
+});
+
+
 // 지원하지 않는 메서드 (405)
 function methodNotAllowed(req) {
   const origin = req.headers.get('origin') || '';
@@ -114,6 +212,8 @@ function methodNotAllowed(req) {
     },
   });
 }
+
+
 
 export const POST   = methodNotAllowed;
 export const PUT    = methodNotAllowed;
