@@ -90,7 +90,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       repairStationLabel: repair.repairStationLabel,
       repairer: repair.repairer,
       repairCategories: repair.repairCategories,
-      batteryVolatge: repair.batteryVolatge,
+      batteryVoltage: repair.batteryVoltage,
       etcRepairParts: repair.etcRepairParts,
       memo: repair.memo,
   }));
@@ -105,8 +105,9 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
 //post
 export const POST = withAuth(async (req, { params }, decoded) => {
+  await connectToMongoose();
   const origin = req.headers.get('origin') || '';
-  const { vehicleId } = params;
+  const { vehicleId } = await params;
 
   if (!vehicleId || !isValidObjectId(vehicleId)) {
     return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
@@ -155,8 +156,6 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     'billingPrice',
     'isAccident',
     'repairCategories',
-    'batteryVoltage',
-    'repairer',
     'repairStationCode',
     'repairStationLabel',
   ];
@@ -178,7 +177,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
       isAccident: body.isAccident,
       repairCategories: body.repairCategories,
       batteryVoltage: body.batteryVoltage,
-      repairer: body.repairer || true, 
+      repairer: body.repairer,
       repairStationCode: body.repairStationCode,
       repairStationLabel: body.repairStationLabel,
       etcRepairParts: body.etcRepairParts || '',
