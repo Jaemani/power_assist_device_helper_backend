@@ -96,7 +96,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       repairStationLabel: repairDoc.repairStationLabel,
       repairer: repairDoc.repairer,
       repairCategories: repairDoc.repairCategories,
-      batteryVolatge: repairDoc.batteryVolatge,
+      batteryVoltage: repairDoc.batteryVolatge,
       etcRepairParts: repairDoc.etcRepairParts,
       memo: repairDoc.memo,
     }, {

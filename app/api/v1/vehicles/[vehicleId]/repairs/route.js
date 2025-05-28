@@ -5,10 +5,6 @@ import { withAuth } from '@/lib/auth/withAuth';
 import { getCorsHeaders } from '@/lib/cors';
 import mongoose from 'mongoose';
 
-function isValidObjectId(id) {
-  return mongoose.Types.ObjectId.isValid(id) && id.length === 24;
-}
-
 // OPTIONS (preflight)
 export async function OPTIONS(req) {
   const origin = req.headers.get('origin') || '';
@@ -113,7 +109,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
 
    // URL 파라미터에서 vehicleId 추출 및 유효성 검사
   const { vehicleId } = await params;
-  if (!vehicleId || !isValidObjectId(vehicleId)) {
+  if (!vehicleId) {
     return new NextResponse(JSON.stringify({ error: 'Invalid vehicleId' }), {
       status: 400,
       headers: getCorsHeaders(origin),
