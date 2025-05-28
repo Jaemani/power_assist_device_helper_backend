@@ -21,7 +21,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     console.log("POST users/");
     try {
         const body = await req.json();
-        const {name, supportedDistrict, vehicleId, model, purchasedAt, registeredAt, recipientType} = body; // smsConsent 뺌
+        const {name, supportedDistrict, vehicleId, model, purchasedAt, manufacturedAt, recipientType} = body; // smsConsent 뺌
         const firebaseUid = decoded.user_id;
         const phoneNumber = decoded.phone_number;
         const role = 'user'
@@ -111,7 +111,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
                     userId:new mongoose.Types.ObjectId(newUser._id.toString()) , // newly generated user's ObjectId
                     model: model,
                     purchasedAt: new Date(purchasedAt), // ISOString to Date
-                    registeredAt: new Date(registeredAt), // ISOString to Date
+                    manufacturedAt: new Date(manufacturedAt), // ISOString to Date
                  } } // update
             );
 
