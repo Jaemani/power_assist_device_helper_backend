@@ -55,7 +55,7 @@ export const GET = withAuth( async (req, { params }, decoded) => {
         vehicleId: vehicle.vehicleId,
         model: vehicle.model,
         purchasedAt: vehicle.purchasedAt ? vehicle.purchasedAt.toISOString() : "", // Date to ISOString
-        registeredAt: vehicle.registeredAt ? vehicle.registeredAt.toISOString() : "", // Date to ISOString
+        manufacturedAt: vehicle.manufacturedAt ? vehicle.manufacturedAt.toISOString() : "", // Date to ISOString
     }, {
         status: 200,
         headers: getCorsHeaders(origin),
