@@ -26,6 +26,10 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const repairStationCode = searchParams.get('repairStationCode');
             const isAccident = searchParams.get('isAccident');
             const vehicleId = searchParams.get('vehicleId');
+            const searchTerm = searchParams.get('searchTerm');
+            const repairTypeSearch = searchParams.get('repairTypeSearch');
+            const minAmount = searchParams.get('minAmount');
+            const maxAmount = searchParams.get('maxAmount');
 
             // Calculate skip for pagination
             const skip = (page - 1) * limit;
@@ -50,6 +54,15 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             }
             if (vehicleId) {
                 query.vehicleId = vehicleId;
+            }
+            if (minAmount) {
+                query.billingPrice = { $gte: parseInt(minAmount) };
+            }
+            if (maxAmount) {
+                query.billingPrice = { 
+                    ...query.billingPrice,
+                    $lte: parseInt(maxAmount)
+                };
             }
 
             // Build aggregation pipeline
@@ -82,7 +95,53 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                         path: "$user",
                         preserveNullAndEmptyArrays: true
                     }
-                },
+                }
+            ];
+
+            // Add search filtering after lookups
+            const searchConditions = [];
+            
+            if (searchTerm) {
+                searchConditions.push({
+                    $or: [
+                        { "user.name": { $regex: searchTerm, $options: "i" } },
+                        { "vehicle.vehicleId": { $regex: searchTerm, $options: "i" } }
+                    ]
+                });
+            }
+            
+            if (repairTypeSearch) {
+                const repairSearchConditions = [];
+                
+                // Search in repair categories and other text fields
+                repairSearchConditions.push({
+                    $or: [
+                        { "repairCategories": { $regex: repairTypeSearch, $options: "i" } },
+                        { "repairType": { $regex: repairTypeSearch, $options: "i" } },
+                        { "troubleInfo": { $regex: repairTypeSearch, $options: "i" } },
+                        { "repairDetail": { $regex: repairTypeSearch, $options: "i" } }
+                    ]
+                });
+                
+                // Search for repair type (사고/정기점검) based on Korean terms
+                const searchTerm = repairTypeSearch.toLowerCase();
+                if (searchTerm.includes('사고')) {
+                    repairSearchConditions.push({ "isAccident": true });
+                }
+                if (searchTerm.includes('정기점검') || searchTerm.includes('정기') || searchTerm.includes('점검')) {
+                    repairSearchConditions.push({ "isAccident": false });
+                }
+                
+                // Add the combined repair search conditions
+                searchConditions.push({ $or: repairSearchConditions });
+            }
+            
+            if (searchConditions.length > 0) {
+                pipeline.push({ $match: { $and: searchConditions } });
+            }
+
+            // Add remaining pipeline stages
+            pipeline.push(
                 {
                     $addFields: {
                         "vehicle._id": { $toString: "$vehicle._id" },
@@ -98,6 +157,11 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                         isAccident: 1,
                         repairStationLabel: 1,
                         repairStationCode: 1,
+                        repairer: 1,
+                        repairCategories: 1,
+                        batteryVoltage: 1,
+                        etcRepairParts: 1,
+                        memo: 1,
                         troubleInfo: 1,
                         repairDetail: 1,
                         repairType: 1,
@@ -118,7 +182,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                     }
                 },
                 { $sort: { repairedAt: -1 } }
-            ];
+            );
 
             // Execute aggregation with pagination
             const [repairsResult, totalResult] = await Promise.all([
@@ -128,7 +192,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                     { $limit: limit }
                 ]),
                 Repairs.aggregate([
-                    { $match: query },
+                    ...pipeline.slice(0, -2), // Remove projection and sorting for count
                     { $count: "total" }
                 ])
             ]);

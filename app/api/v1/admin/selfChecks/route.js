@@ -22,6 +22,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const vehicleId = searchParams.get('vehicleId');
             const hasIssues = searchParams.get('hasIssues');
             const search = searchParams.get('search');
+            const checkResultSearch = searchParams.get('checkResultSearch');
 
             // Calculate skip for pagination
             const skip = (page - 1) * limit;
@@ -102,17 +103,94 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             ];
 
             // Add search filter to pipeline if provided
+            const searchConditions = [];
+            
             if (search) {
-                const searchLower = search.toLowerCase();
-                pipeline.push({
-                    $match: {
-                        $or: [
-                            { "vehicle.vehicleId": { $regex: searchLower, $options: "i" } },
-                            { "user.name": { $regex: searchLower, $options: "i" } },
-                            { "user.phoneNumber": { $regex: search, $options: "i" } }
-                        ]
-                    }
+                searchConditions.push({
+                    $or: [
+                        { "vehicle.vehicleId": { $regex: search, $options: "i" } },
+                        { "user.name": { $regex: search, $options: "i" } },
+                        { "user.phoneNumber": { $regex: search, $options: "i" } }
+                    ]
                 });
+            }
+            
+            if (checkResultSearch) {
+                // For check result search, we'll create conditions based on the search term
+                // mapping common Korean terms to boolean fields
+                const searchTerm = checkResultSearch.toLowerCase();
+                const checkConditions = [];
+                
+                // Motor related searches
+                if (searchTerm.includes('모터') || searchTerm.includes('소음') || searchTerm.includes('진동')) {
+                    checkConditions.push({ motorNoise: true });
+                }
+                if (searchTerm.includes('속도') || searchTerm.includes('느림') || searchTerm.includes('빠름')) {
+                    checkConditions.push({ abnormalSpeed: true });
+                }
+                
+                // Battery related searches
+                if (searchTerm.includes('배터리') || searchTerm.includes('점멸') || searchTerm.includes('깜빡')) {
+                    checkConditions.push({ batteryBlinking: true });
+                }
+                if (searchTerm.includes('충전') && (searchTerm.includes('안') || searchTerm.includes('못'))) {
+                    checkConditions.push({ chargingNotStart: true });
+                }
+                if (searchTerm.includes('방전') || searchTerm.includes('빨리')) {
+                    checkConditions.push({ batteryDischargeFast: true });
+                }
+                if (searchTerm.includes('완충') && searchTerm.includes('안')) {
+                    checkConditions.push({ incompleteCharging: true });
+                }
+                
+                // Brake related searches
+                if (searchTerm.includes('브레이크') || searchTerm.includes('제동') || searchTerm.includes('지연')) {
+                    checkConditions.push({ breakDelay: true });
+                }
+                if (searchTerm.includes('패드') || searchTerm.includes('마모')) {
+                    checkConditions.push({ breakPadIssue: true });
+                }
+                
+                // Tire related searches
+                if (searchTerm.includes('타이어') || searchTerm.includes('펑크')) {
+                    checkConditions.push({ tubePunctureFrequent: true });
+                }
+                if (searchTerm.includes('타이어') && searchTerm.includes('마모')) {
+                    checkConditions.push({ tireWearFrequent: true });
+                }
+                
+                // Seat related searches
+                if (searchTerm.includes('시트') || searchTerm.includes('느슨')) {
+                    checkConditions.push({ seatUnstable: true });
+                }
+                if (searchTerm.includes('시트') && searchTerm.includes('커버')) {
+                    checkConditions.push({ seatCoverIssue: true });
+                }
+                
+                // Frame related searches
+                if (searchTerm.includes('프레임') || searchTerm.includes('소음')) {
+                    checkConditions.push({ frameNoise: true });
+                }
+                if (searchTerm.includes('프레임') && (searchTerm.includes('깨짐') || searchTerm.includes('금') || searchTerm.includes('휘어짐'))) {
+                    checkConditions.push({ frameCrack: true });
+                }
+                
+                // Other searches
+                if (searchTerm.includes('발걸이')) {
+                    checkConditions.push({ footRestLoose: true });
+                }
+                if (searchTerm.includes('미끄럼') || searchTerm.includes('고무')) {
+                    checkConditions.push({ antislipWorn: true });
+                }
+                
+                // If we found matching conditions, add them to search
+                if (checkConditions.length > 0) {
+                    searchConditions.push({ $or: checkConditions });
+                }
+            }
+            
+            if (searchConditions.length > 0) {
+                pipeline.push({ $match: { $and: searchConditions } });
             }
 
             // Add projection and sorting
@@ -162,40 +240,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                     { $limit: limit }
                 ]),
                 SelfChecks.aggregate([
-                    { $match: query },
-                    ...(search ? [{
-                        $lookup: {
-                            from: "vehicles",
-                            localField: "vehicleId",
-                            foreignField: "_id",
-                            as: "vehicle"
-                        }
-                    }, {
-                        $unwind: {
-                            path: "$vehicle",
-                            preserveNullAndEmptyArrays: true
-                        }
-                    }, {
-                        $lookup: {
-                            from: "users",
-                            localField: "vehicle.userId",
-                            foreignField: "_id",
-                            as: "user"
-                        }
-                    }, {
-                        $unwind: {
-                            path: "$user",
-                            preserveNullAndEmptyArrays: true
-                        }
-                    }, {
-                        $match: {
-                            $or: [
-                                { "vehicle.vehicleId": { $regex: search.toLowerCase(), $options: "i" } },
-                                { "user.name": { $regex: search.toLowerCase(), $options: "i" } },
-                                { "user.phoneNumber": { $regex: search, $options: "i" } }
-                            ]
-                        }
-                    }] : []),
+                    ...pipeline.slice(0, -2), // Remove projection and sorting for count
                     { $count: "total" }
                 ])
             ]);
