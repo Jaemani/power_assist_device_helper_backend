@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectToMongoose from '@/lib/db/connect';
-import { Users, Vehicles, Repairs } from '@/lib/db/models';
+import { Users, Vehicles, Repairs, RepairStations } from '@/lib/db/models';
 import { withAuth } from '@/lib/auth/withAuth';
 import { getCorsHeaders } from '@/lib/cors';
 import mongoose from 'mongoose';
@@ -120,8 +120,10 @@ export const POST = withAuth(async (req, { params }, decoded) => {
 
   // admin 우회
   let loginUser = null;
+  let firebaseUid = null;
+
   if (decoded.role !== 'admin') {
-    const firebaseUid = decoded.user_id;
+    firebaseUid = decoded.user_id;
     loginUser = await Users.findOne({ firebaseUid }).lean();
     if (!loginUser) {
       return new NextResponse(
@@ -141,14 +143,27 @@ export const POST = withAuth(async (req, { params }, decoded) => {
   }
 
   // 소유권 확인 (수리자, 관리자는 통과)
-  if (userDoc.role !== 'repairer' && decoded.role !== 'admin' && String(vehicle.userId) !== String(loginUser._id)) {
+  if (loginUser.role !== 'repairer') {
     return new NextResponse(
-      JSON.stringify({ error: 'Forbidden: not the vehicle owner' }),
-      { status: 403, headers: getCorsHeaders(origin) }
+      JSON.stringify({ error: 'Not the repairer' }),
+      { status: 404, headers: getCorsHeaders(origin) }
     );
   }
 
    //  요청 바디 파싱
+
+  const repairStation = await RepairStations.findOne({ firebaseUid });
+
+  if (!repairStation) {
+    return new NextResponse(JSON.stringify({ error: 'Repairer has not matched RepairStation' }), {
+      status: 404,
+      headers: getCorsHeaders(origin),
+    });
+  }
+  
+  const repairStationCode = repairStation.code;
+  const repairStationLabel = repairStation.label;
+
   let body;
   try {
     body = await req.json();
@@ -164,9 +179,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     'repairedAt',
     'billingPrice',
     'isAccident',
-    'repairCategories',
-    'repairStationCode',
-    'repairStationLabel',
+    'repairCategories'
   ];
 
   for (const field of requiredFields) {
@@ -178,7 +191,7 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     }
   }
 
-    //  새 수리 기록 생성 및 저장
+  //  새 수리 기록 생성 및 저장
   try {
     const newRepair = new Repairs({
       vehicleId: vehicle._id,
@@ -186,10 +199,10 @@ export const POST = withAuth(async (req, { params }, decoded) => {
       billingPrice: body.billingPrice,
       isAccident: body.isAccident,
       repairCategories: body.repairCategories,
-      batteryVoltage: body.batteryVoltage,
-      repairer: body.repairer,
-      repairStationCode: body.repairStationCode,
-      repairStationLabel: body.repairStationLabel,
+      batteryVoltage: body.batteryVoltage || 0,
+      repairer: loginUser.name, // repairer는 로그인한 사용자
+      repairStationCode: repairStationCode,
+      repairStationLabel: repairStationLabel,
       etcRepairParts: body.etcRepairParts || '',
       memo: body.memo || '',
     });
