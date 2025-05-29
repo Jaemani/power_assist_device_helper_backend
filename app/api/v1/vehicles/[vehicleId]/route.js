@@ -41,12 +41,15 @@ export const GET = withAuth( async (req, { params }, decoded) => {
     const vehicleUserId = vehicle?.userId
 
     // front vehicleUserId, loginUser is to avoid null access
-    if (vehicleUserId && loginUser && vehicleUserId.toString() != loginUser._id.toString()) {
-        return new NextResponse(JSON.stringify({ error: 'Not the vehicle owner' }), {
-            status: 403,
-            headers: getCorsHeaders(origin),
-        });
+    if (loginUser && loginUser.role !== 'repairer'){
+        if (vehicleUserId && vehicleUserId.toString() != loginUser._id.toString()) {
+            return new NextResponse(JSON.stringify({ error: 'Not the vehicle owner' }), {
+                status: 403,
+                headers: getCorsHeaders(origin),
+            });
+        }
     }
+    
     console.log("Response vehicles/" + vehicleId + " as successful.\n" + (vehicleUserId ? vehicleUserId : ""));
     // no owner vehicle OR owner is the same as loginUser
     return NextResponse.json({

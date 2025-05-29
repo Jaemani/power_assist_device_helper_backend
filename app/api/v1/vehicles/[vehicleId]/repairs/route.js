@@ -55,9 +55,11 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       });
   }
 
-  if (decoded.role !== 'admin'){ // admin 우회
-    // vehicle 소유권 확인
-    const vehicleDoc = await Vehicles.findOne({ vehicleId: vehicleId }).lean();
+  
+  // vehicle 소유권 확인
+  const vehicleDoc = await Vehicles.findOne({ vehicleId: vehicleId }).lean();
+
+  if (userDoc.role !== 'repairer' && decoded.role !== 'admin'){ // repairer, admin 우회
     if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
       return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
         status: 403,
@@ -138,8 +140,8 @@ export const POST = withAuth(async (req, { params }, decoded) => {
     });
   }
 
-  // 소유권 확인 (관리자는 통과)
-  if (decoded.role !== 'admin' && String(vehicle.userId) !== String(loginUser._id)) {
+  // 소유권 확인 (수리자, 관리자는 통과)
+  if (userDoc.role !== 'repairer' && decoded.role !== 'admin' && String(vehicle.userId) !== String(loginUser._id)) {
     return new NextResponse(
       JSON.stringify({ error: 'Forbidden: not the vehicle owner' }),
       { status: 403, headers: getCorsHeaders(origin) }

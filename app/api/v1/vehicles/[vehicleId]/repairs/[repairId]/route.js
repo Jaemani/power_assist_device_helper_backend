@@ -69,11 +69,13 @@ export const GET = withAuth(async (req, { params }, decoded) => {
 
   // vehicle 소유권 확인
   const vehicleDoc = await Vehicles.findOne({ _id: vehicle._id.toString() }).lean();
-  if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
-    return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
-      status: 403,
-      headers: getCorsHeaders(origin),
-    });
+  if (userDoc.role !== 'repairer') { // repairer 우회
+    if (!vehicleDoc || String(vehicleDoc.userId) !== String(userDoc._id)) {
+      return new NextResponse(JSON.stringify({ error: 'Forbidden: not the vehicle owner' }), {
+        status: 403,
+        headers: getCorsHeaders(origin),
+      });
+    }
   }
 
   // repair 문서 조회
