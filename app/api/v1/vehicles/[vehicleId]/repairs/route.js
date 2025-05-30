@@ -89,7 +89,6 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       repairer: repair.repairer,
       repairCategories: repair.repairCategories,
       batteryVoltage: repair.batteryVoltage,
-      etcRepairParts: repair.etcRepairParts,
       memo: repair.memo,
   }));
   
@@ -203,7 +202,6 @@ export const POST = withAuth(async (req, { params }, decoded) => {
       repairer: loginUser.name, // repairer는 로그인한 사용자
       repairStationCode: repairStationCode,
       repairStationLabel: repairStationLabel,
-      etcRepairParts: body.etcRepairParts || '',
       memo: body.memo || '',
     });
 

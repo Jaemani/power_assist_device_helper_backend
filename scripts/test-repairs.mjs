@@ -18,7 +18,6 @@ async function testPost() {
     isAccident: true,
     repairCategories: ['배터리', '기타'],
     batteryVoltage: 48.0,
-    etcRepairParts: '배터리 교체',
     memo: 'Node.js 테스트',
     repairer: '정수리'
   };

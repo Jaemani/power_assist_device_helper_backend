@@ -99,7 +99,6 @@ export const GET = withAuth(async (req, { params }, decoded) => {
       repairer: repairDoc.repairer,
       repairCategories: repairDoc.repairCategories,
       batteryVoltage: repairDoc.batteryVolatge,
-      etcRepairParts: repairDoc.etcRepairParts,
       memo: repairDoc.memo,
     }, {
     status: 200,

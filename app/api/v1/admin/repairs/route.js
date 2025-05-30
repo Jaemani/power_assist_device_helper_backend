@@ -160,7 +160,6 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                         repairer: 1,
                         repairCategories: 1,
                         batteryVoltage: 1,
-                        etcRepairParts: 1,
                         memo: 1,
                         troubleInfo: 1,
                         repairDetail: 1,
