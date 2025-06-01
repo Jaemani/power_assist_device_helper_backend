@@ -43,6 +43,7 @@ export async function POST(request) {
         // Create JWT token
         const secret = new TextEncoder().encode(process.env.JWT_SECRET);
         const token = await new SignJWT({ 
+            sub: admin._id.toString(),
             id: admin.id,
             label: repairStation.label,
             role: 'admin',

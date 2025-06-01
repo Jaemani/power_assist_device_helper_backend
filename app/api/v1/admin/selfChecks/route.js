@@ -23,6 +23,7 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const hasIssues = searchParams.get('hasIssues');
             const search = searchParams.get('search');
             const checkResultSearch = searchParams.get('checkResultSearch');
+            const checkResults = searchParams.get('checkResults');
 
             // Calculate skip for pagination
             const skip = (page - 1) * limit;
@@ -61,6 +62,57 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                     { frameNoise: true },
                     { frameCrack: true }
                 ];
+            }
+
+            // Handle checkResults multiselect filter
+            if (checkResults) {
+                const selectedCategories = checkResults.split(',').filter(cat => cat.trim());
+                if (selectedCategories.length > 0) {
+                    const categoryConditions = [];
+                    
+                    selectedCategories.forEach(category => {
+                        switch (category.trim()) {
+                            case '모터':
+                                categoryConditions.push({ $or: [{ motorNoise: true }, { abnormalSpeed: true }] });
+                                break;
+                            case '배터리':
+                                categoryConditions.push({ 
+                                    $or: [
+                                        { batteryBlinking: true }, 
+                                        { chargingNotStart: true }, 
+                                        { batteryDischargeFast: true }, 
+                                        { incompleteCharging: true }
+                                    ] 
+                                });
+                                break;
+                            case '제동':
+                                categoryConditions.push({ $or: [{ breakDelay: true }, { breakPadIssue: true }] });
+                                break;
+                            case '타이어':
+                                categoryConditions.push({ $or: [{ tubePunctureFrequent: true }, { tireWearFrequent: true }] });
+                                break;
+                            case '시트':
+                                categoryConditions.push({ $or: [{ seatUnstable: true }, { seatCoverIssue: true }] });
+                                break;
+                            case '프레임':
+                                categoryConditions.push({ $or: [{ frameNoise: true }, { frameCrack: true }] });
+                                break;
+                            case '기타':
+                                categoryConditions.push({ $or: [{ footRestLoose: true }, { antislipWorn: true }] });
+                                break;
+                        }
+                    });
+                    
+                    if (categoryConditions.length > 0) {
+                        if (query.$or) {
+                            // If hasIssues is already set, combine with checkResults
+                            query.$and = [{ $or: query.$or }, { $or: categoryConditions }];
+                            delete query.$or;
+                        } else {
+                            query.$or = categoryConditions;
+                        }
+                    }
+                }
             }
 
             // Build aggregation pipeline

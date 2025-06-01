@@ -27,9 +27,11 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const isAccident = searchParams.get('isAccident');
             const vehicleId = searchParams.get('vehicleId');
             const searchTerm = searchParams.get('searchTerm');
-            const repairTypeSearch = searchParams.get('repairTypeSearch');
+            const repairType = searchParams.get('repairType');
             const minAmount = searchParams.get('minAmount');
             const maxAmount = searchParams.get('maxAmount');
+            const repairCategories = searchParams.get('repairCategories');
+            const memo = searchParams.get('memo');
 
             // Calculate skip for pagination
             const skip = (page - 1) * limit;
@@ -52,6 +54,14 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             if (isAccident !== null && isAccident !== undefined) {
                 query.isAccident = isAccident === 'true';
             }
+            // Handle repairType filter from frontend
+            if (repairType) {
+                if (repairType === 'accident') {
+                    query.isAccident = true;
+                } else if (repairType === 'regular') {
+                    query.isAccident = false;
+                }
+            }
             if (vehicleId) {
                 query.vehicleId = vehicleId;
             }
@@ -63,6 +73,15 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                     ...query.billingPrice,
                     $lte: parseInt(maxAmount)
                 };
+            }
+            if (repairCategories) {
+                const categoriesArray = repairCategories.split(',').filter(cat => cat.trim());
+                if (categoriesArray.length > 0) {
+                    query.repairCategories = { $in: categoriesArray };
+                }
+            }
+            if (memo) {
+                query.memo = { $regex: memo, $options: 'i' };
             }
 
             // Build aggregation pipeline
@@ -108,32 +127,6 @@ export const GET = withAuth(async (req, { params }, decoded) => {
                         { "vehicle.vehicleId": { $regex: searchTerm, $options: "i" } }
                     ]
                 });
-            }
-            
-            if (repairTypeSearch) {
-                const repairSearchConditions = [];
-                
-                // Search in repair categories and other text fields
-                repairSearchConditions.push({
-                    $or: [
-                        { "repairCategories": { $regex: repairTypeSearch, $options: "i" } },
-                        { "repairType": { $regex: repairTypeSearch, $options: "i" } },
-                        { "troubleInfo": { $regex: repairTypeSearch, $options: "i" } },
-                        { "repairDetail": { $regex: repairTypeSearch, $options: "i" } }
-                    ]
-                });
-                
-                // Search for repair type (사고/정기점검) based on Korean terms
-                const searchTerm = repairTypeSearch.toLowerCase();
-                if (searchTerm.includes('사고')) {
-                    repairSearchConditions.push({ "isAccident": true });
-                }
-                if (searchTerm.includes('정기점검') || searchTerm.includes('정기') || searchTerm.includes('점검')) {
-                    repairSearchConditions.push({ "isAccident": false });
-                }
-                
-                // Add the combined repair search conditions
-                searchConditions.push({ $or: repairSearchConditions });
             }
             
             if (searchConditions.length > 0) {
