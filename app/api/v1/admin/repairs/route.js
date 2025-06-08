@@ -40,12 +40,12 @@ export const GET = withAuth(async (req, { params }, decoded) => {
             const query = {};
             
             if (startDate) {
-                query.repairedAt = { $gte: new Date(startDate) };
+                query.repairedAt = { $gte: startDate };
             }
             if (endDate) {
-                query.repairedAt = { 
+                query.repairedAt = {
                     ...query.repairedAt,
-                    $lte: new Date(endDate + 'T23:59:59')
+                    $lte: endDate + 'T23:59:59'
                 };
             }
             if (repairStationCode) {
